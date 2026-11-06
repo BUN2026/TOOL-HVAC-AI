@@ -12,15 +12,28 @@ namespace HvacPalette
         private Dictionary<string, List<HvacLayerItem>> _categoryLayers;
         private string _currentCategory = "duct";
         private HvacLayerItem _currentLayer;
-        private string _flowUnit = "m3h"; // "m3h" hoặc "Ls"
+        private string _flowUnit = "m3h";
         private string _termFlowUnit = "m3h";
         private bool _isFrictionMethod = true;
         private double _currentPv = 11.88;
+
+        // Static memory to remember last operation & state across Palette sessions
+        private static string _savedCategory = "duct";
+        private static double _savedDuctFlow = 1200;
+        private static int _savedWidth = 400;
+        private static int _savedHeight = 250;
+        private static double _savedTermFlow = 300;
+        private static int _savedTermNeck = 200;
+        private static bool _savedIsMainDuct = true;
+        private static bool _savedExpDuct = true;
+        private static bool _savedExpTerm = false;
+        private static bool _savedExpFitting = false;
 
         public HvacPaletteControl()
         {
             InitializeComponent();
             InitData();
+            RestoreLastOperationState();
         }
 
         private void InitData()
@@ -50,21 +63,20 @@ namespace HvacPalette
             cboFittingType.SelectedIndex = 0;
 
             // Populate Air Terminals (5 Block DXF)
-            cboTerminalBlock.Items.Add(new ComboBoxItem { Content = "Khuếch tán 4 hướng (BUN_Mieng gio khuyech tan 4 huong.dxf)", Tag = "BUN_Mieng gio khuyech tan 4 huong.dxf" });
-            cboTerminalBlock.Items.Add(new ComboBoxItem { Content = "Khuếch tán tròn (BUN_Mieng gio khuyech tan tron.dxf)", Tag = "BUN_Mieng gio khuyech tan tron.dxf" });
-            cboTerminalBlock.Items.Add(new ComboBoxItem { Content = "Miệng gió nan đơn (BUN_Mieng gio nan don.dxf)", Tag = "BUN_Mieng gio nan don.dxf" });
-            cboTerminalBlock.Items.Add(new ComboBoxItem { Content = "Miệng gió hồi sọt trứng (BUN_Mieng gio sot trung.dxf)", Tag = "BUN_Mieng gio sot trung.dxf" });
-            cboTerminalBlock.Items.Add(new ComboBoxItem { Content = "Miệng gió Louver ngoài trời (BUN_Mieng gio louver.dxf)", Tag = "BUN_Mieng gio louver.dxf" });
+            cboTerminalBlock.Items.Add(new ComboBoxItem { Content = "Khuếch tán 4 hướng", Tag = "BUN_Mieng gio khuyech tan 4 huong.dxf" });
+            cboTerminalBlock.Items.Add(new ComboBoxItem { Content = "Khuếch tán tròn", Tag = "BUN_Mieng gio khuyech tan tron.dxf" });
+            cboTerminalBlock.Items.Add(new ComboBoxItem { Content = "Miệng gió nan đơn", Tag = "BUN_Mieng gio nan don.dxf" });
+            cboTerminalBlock.Items.Add(new ComboBoxItem { Content = "Hồi sọt trứng", Tag = "BUN_Mieng gio sot trung.dxf" });
+            cboTerminalBlock.Items.Add(new ComboBoxItem { Content = "Louver ngoài trời", Tag = "BUN_Mieng gio louver.dxf" });
             cboTerminalBlock.SelectedIndex = 0;
 
             // Populate Target Vneck
-            cboTargetVneck.Items.Add(new ComboBoxItem { Content = "2.0 m/s (Rất êm / NC 20)", Tag = 2.0 });
-            cboTargetVneck.Items.Add(new ComboBoxItem { Content = "2.5 m/s (Chuẩn VP / NC 25)", Tag = 2.5 });
-            cboTargetVneck.Items.Add(new ComboBoxItem { Content = "3.0 m/s (Thương mại / NC 30)", Tag = 3.0 });
+            cboTargetVneck.Items.Add(new ComboBoxItem { Content = "2.0 m/s (Êm)", Tag = 2.0 });
+            cboTargetVneck.Items.Add(new ComboBoxItem { Content = "2.5 m/s (VP)", Tag = 2.5 });
+            cboTargetVneck.Items.Add(new ComboBoxItem { Content = "3.0 m/s (TM)", Tag = 3.0 });
             cboTargetVneck.SelectedIndex = 1;
 
-            // Populate Terminal Face & Neck
-            string[] faces = new string[] { "600x600", "450x450", "300x300", "1200x150", "1000x200" };
+            string[] faces = new string[] { "600x600", "450x450", "300x300", "1200x150" };
             foreach (string f in faces) cboTermFace.Items.Add(f);
             cboTermFace.SelectedIndex = 0;
 
@@ -76,8 +88,8 @@ namespace HvacPalette
             cboGasHp.Items.Add(new ComboBoxItem { Content = "1.5 - 2.0 HP (FCU Nhỏ)", Tag = 1.5 });
             cboGasHp.Items.Add(new ComboBoxItem { Content = "2.5 - 3.2 HP (FCU Vừa)", Tag = 3.0 });
             cboGasHp.Items.Add(new ComboBoxItem { Content = "4.0 - 5.0 HP (FCU Lớn)", Tag = 5.0 });
-            cboGasHp.Items.Add(new ComboBoxItem { Content = "8.0 - 10.0 HP (Dàn nóng VRV)", Tag = 10.0 });
-            cboGasHp.Items.Add(new ComboBoxItem { Content = "12.0 - 16.0 HP (Module VRV)", Tag = 16.0 });
+            cboGasHp.Items.Add(new ComboBoxItem { Content = "8.0 - 10.0 HP (VRV)", Tag = 10.0 });
+            cboGasHp.Items.Add(new ComboBoxItem { Content = "12.0 - 16.0 HP (Module)", Tag = 16.0 });
             cboGasHp.SelectedIndex = 1;
 
             // Populate Drain Sizes
@@ -93,6 +105,29 @@ namespace HvacPalette
             RunTerminalCalculation();
         }
 
+        private void RestoreLastOperationState()
+        {
+            if (txtFlowValue != null) txtFlowValue.Text = _savedDuctFlow.ToString("F0");
+            if (cboWidth != null) cboWidth.SelectedItem = _savedWidth;
+            if (cboHeight != null) cboHeight.SelectedItem = _savedHeight;
+            if (txtTermFlow != null) txtTermFlow.Text = _savedTermFlow.ToString("F0");
+            if (cboTermNeck != null) cboTermNeck.SelectedItem = _savedTermNeck;
+            if (chkIsMainDuct != null) chkIsMainDuct.IsChecked = _savedIsMainDuct;
+
+            if (expDuctStraight != null) expDuctStraight.IsExpanded = _savedExpDuct;
+            if (expTerminal != null) expTerminal.IsExpanded = _savedExpTerm;
+            if (expFitting != null) expFitting.IsExpanded = _savedExpFitting;
+
+            SwitchCategoryUI(_savedCategory);
+        }
+
+        private void Expander_StateChanged(object sender, RoutedEventArgs e)
+        {
+            if (expDuctStraight != null) _savedExpDuct = expDuctStraight.IsExpanded;
+            if (expTerminal != null) _savedExpTerm = expTerminal.IsExpanded;
+            if (expFitting != null) _savedExpFitting = expFitting.IsExpanded;
+        }
+
         private void PopulateCriteriaValues()
         {
             if (cboCriteriaValue == null) return;
@@ -100,20 +135,19 @@ namespace HvacPalette
 
             if (_isFrictionMethod)
             {
-                cboCriteriaValue.Items.Add(new ComboBoxItem { Content = "0.65 Pa/m (Êm dịu / Khách sạn)", Tag = 0.65 });
-                cboCriteriaValue.Items.Add(new ComboBoxItem { Content = "0.80 Pa/m (Chuẩn ASHRAE / TCVN)", Tag = 0.80 });
-                cboCriteriaValue.Items.Add(new ComboBoxItem { Content = "1.00 Pa/m (Kinh tế / Tối ưu diện tích)", Tag = 1.00 });
-                cboCriteriaValue.Items.Add(new ComboBoxItem { Content = "1.20 Pa/m (Tốc độ cao / Trục chính)", Tag = 1.20 });
+                cboCriteriaValue.Items.Add(new ComboBoxItem { Content = "0.65 Pa/m (Êm dịu)", Tag = 0.65 });
+                cboCriteriaValue.Items.Add(new ComboBoxItem { Content = "0.80 Pa/m (Chuẩn ASHRAE)", Tag = 0.80 });
+                cboCriteriaValue.Items.Add(new ComboBoxItem { Content = "1.00 Pa/m (Kinh tế)", Tag = 1.00 });
+                cboCriteriaValue.Items.Add(new ComboBoxItem { Content = "1.20 Pa/m (Trục đứng)", Tag = 1.20 });
                 cboCriteriaValue.SelectedIndex = 1;
             }
             else
             {
-                cboCriteriaValue.Items.Add(new ComboBoxItem { Content = "2.5 m/s (Cổ miệng gió)", Tag = 2.5 });
-                cboCriteriaValue.Items.Add(new ComboBoxItem { Content = "4.0 m/s (Nhánh miệng gió)", Tag = 4.0 });
+                cboCriteriaValue.Items.Add(new ComboBoxItem { Content = "4.0 m/s (Nhánh)", Tag = 4.0 });
                 cboCriteriaValue.Items.Add(new ComboBoxItem { Content = "5.5 m/s (Nhánh chính)", Tag = 5.5 });
                 cboCriteriaValue.Items.Add(new ComboBoxItem { Content = "7.0 m/s (Trục chính)", Tag = 7.0 });
                 cboCriteriaValue.Items.Add(new ComboBoxItem { Content = "8.5 m/s (Trục đứng)", Tag = 8.5 });
-                cboCriteriaValue.SelectedIndex = 3;
+                cboCriteriaValue.SelectedIndex = 2;
             }
         }
 
@@ -140,7 +174,7 @@ namespace HvacPalette
             _currentLayer = cboLayerSelect.SelectedItem as HvacLayerItem;
             if (_currentLayer != null)
             {
-                txtStatusMessage.Text = string.Format("Layer hiện hành: {0} (Color {1})", _currentLayer.Name, _currentLayer.ColorIndex);
+                txtStatusMessage.Text = string.Format("Layer: {0} ({1})", _currentLayer.Name, _currentLayer.ColorIndex);
                 CadExecutor.SetCurrentLayer(_currentLayer.Name, _currentLayer.ColorIndex);
             }
         }
@@ -150,13 +184,23 @@ namespace HvacPalette
             Button btn = sender as Button;
             if (btn == null || btn.Tag == null) return;
             string cat = btn.Tag.ToString();
+            SwitchCategoryUI(cat);
+        }
 
+        private void SwitchCategoryUI(string cat)
+        {
+            _savedCategory = cat;
             btnCatDuct.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1E293B"));
             btnCatGas.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1E293B"));
             btnCatChiller.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1E293B"));
             btnCatWater.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1E293B"));
             btnCatSignal.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1E293B"));
-            btn.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0284C7"));
+
+            if (cat == "duct") btnCatDuct.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0284C7"));
+            else if (cat == "gas") btnCatGas.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0284C7"));
+            else if (cat == "chiller") btnCatChiller.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0284C7"));
+            else if (cat == "water") btnCatWater.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0284C7"));
+            else if (cat == "signal") btnCatSignal.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0284C7"));
 
             panelDuct.Visibility = cat == "duct" ? Visibility.Visible : Visibility.Collapsed;
             panelGas.Visibility = cat == "gas" ? Visibility.Visible : Visibility.Collapsed;
@@ -212,6 +256,9 @@ namespace HvacPalette
             double w = Convert.ToDouble(cboWidth.SelectedItem);
             double h = Convert.ToDouble(cboHeight.SelectedItem);
 
+            _savedWidth = (int)w;
+            _savedHeight = (int)h;
+
             double flowM3s = GetFlowM3s();
             UpdateHydraulicsUI(w, h, flowM3s);
         }
@@ -220,6 +267,7 @@ namespace HvacPalette
         {
             double rawFlow;
             if (!double.TryParse(txtFlowValue.Text, out rawFlow)) return 0;
+            _savedDuctFlow = rawFlow;
             return _flowUnit == "Ls" ? (rawFlow / 1000.0) : (rawFlow / 3600.0);
         }
 
@@ -297,10 +345,16 @@ namespace HvacPalette
             DuctFlowResult res = AshraeCalculator.CalculateDuctHydraulics(w, h, flowM3s);
             _currentPv = res.DynamicPressurePv;
 
-            lblResultV.Text = string.Format("V = {0:F2} m/s", res.Velocity);
-            lblResultPv.Text = string.Format("Pv = {0:F2} Pa", res.DynamicPressurePv);
-            lblResultDh.Text = string.Format("Dh = Ø{0:F0} mm", res.Dh);
-            lblResultDpf.Text = string.Format("ΔPf = {0:F2} Pa/m", res.FrictionDropPerMeter);
+            lblResultV.Text = string.Format("V={0:F2}", res.Velocity);
+            lblResultPv.Text = string.Format("Pv={0:F1}", res.DynamicPressurePv);
+            lblResultDh.Text = string.Format("Ø{0:F0}", res.Dh);
+            lblResultDpf.Text = string.Format("{0:F2}P/m", res.FrictionDropPerMeter);
+
+            // Cập nhật Live Badge trên thanh tiêu đề thu gọn!
+            if (lblBadgeDuctSummary != null)
+            {
+                lblBadgeDuctSummary.Text = string.Format("{0:F0}x{1:F0} • {2:F2}Pa/m", w, h, res.FrictionDropPerMeter);
+            }
 
             bool isWarning = false;
 
@@ -308,10 +362,6 @@ namespace HvacPalette
             {
                 lblResultV.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EF4444"));
                 isWarning = true;
-            }
-            else if (res.Velocity > 6.5)
-            {
-                lblResultV.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FACC15"));
             }
             else
             {
@@ -323,10 +373,6 @@ namespace HvacPalette
                 lblResultDpf.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EF4444"));
                 isWarning = true;
             }
-            else if (res.FrictionDropPerMeter > 1.05)
-            {
-                lblResultDpf.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FACC15"));
-            }
             else
             {
                 lblResultDpf.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4ADE80"));
@@ -334,17 +380,12 @@ namespace HvacPalette
 
             if (res.AspectRatio <= 3.0)
             {
-                lblAspectRatio.Text = string.Format("W/H: {0:F1}:1 (Chuẩn)", res.AspectRatio);
+                lblAspectRatio.Text = string.Format("W/H: {0:F1}:1", res.AspectRatio);
                 lblAspectRatio.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4ADE80"));
-            }
-            else if (res.AspectRatio <= 4.0)
-            {
-                lblAspectRatio.Text = string.Format("W/H: {0:F1}:1 (Cao)", res.AspectRatio);
-                lblAspectRatio.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FACC15"));
             }
             else
             {
-                lblAspectRatio.Text = string.Format("W/H: {0:F1}:1 (>4:1 Cảnh báo)", res.AspectRatio);
+                lblAspectRatio.Text = string.Format("W/H: {0:F1}:1 (>4:1)", res.AspectRatio);
                 lblAspectRatio.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EF4444"));
                 isWarning = true;
             }
@@ -353,7 +394,6 @@ namespace HvacPalette
             {
                 borderResultBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EF4444"));
                 txtWarningNotice.Visibility = Visibility.Visible;
-                txtWarningNotice.Text = string.Format("⚠️ CẢNH BÁO: V={0:F1}m/s, ΔPf={1:F2}Pa/m vượt ngưỡng chuẩn", res.Velocity, res.FrictionDropPerMeter);
             }
             else
             {
@@ -378,6 +418,13 @@ namespace HvacPalette
                 double co = (double)item.Tag;
                 double dpj = co * _currentPv;
                 lblFittingLoss.Text = string.Format("ΔPj = {0:F2} Pa", dpj);
+
+                if (lblBadgeFittingSummary != null)
+                {
+                    string txt = item.Content != null ? item.Content.ToString() : "Phụ kiện";
+                    string shortName = txt.Split(' ')[0];
+                    lblBadgeFittingSummary.Text = string.Format("{0} • ΔPj={1:F1}Pa", shortName, dpj);
+                }
             }
         }
 
@@ -406,18 +453,6 @@ namespace HvacPalette
             RunTerminalCalculation();
         }
 
-        private void BtnCopyFlow_Click(object sender, RoutedEventArgs e)
-        {
-            double rawDuct;
-            if (!double.TryParse(txtFlowValue.Text, out rawDuct)) rawDuct = 1200;
-            double termQ = rawDuct / 4.0;
-            if (_flowUnit == "m3h" && _termFlowUnit == "Ls") termQ /= 3.6;
-            if (_flowUnit == "Ls" && _termFlowUnit == "m3h") termQ *= 3.6;
-
-            txtTermFlow.Text = Math.Round(termQ).ToString();
-            RunTerminalCalculation();
-        }
-
         private void TxtTermFlow_TextChanged(object sender, TextChangedEventArgs e)
         {
             RunTerminalCalculation();
@@ -437,6 +472,7 @@ namespace HvacPalette
         {
             if (cboTermNeck == null || cboTermNeck.SelectedItem == null) return;
             double neck = Convert.ToDouble(cboTermNeck.SelectedItem);
+            _savedTermNeck = (int)neck;
             UpdateTerminalHydraulics(neck);
         }
 
@@ -446,6 +482,7 @@ namespace HvacPalette
 
             double rawQ;
             if (!double.TryParse(txtTermFlow.Text, out rawQ)) return;
+            _savedTermFlow = rawQ;
             double qM3s = _termFlowUnit == "Ls" ? (rawQ / 1000.0) : (rawQ / 3600.0);
             if (qM3s <= 0) return;
 
@@ -492,21 +529,20 @@ namespace HvacPalette
             double dp = 2.0 * pvNeck;
             int nc = (int)Math.Round(18 + (vNeck * 3.8));
 
-            lblTermVneck.Text = string.Format("V={0:F2} m/s", vNeck);
-            lblTermDp.Text = string.Format("ΔP={0:F1} Pa", dp);
+            lblTermVneck.Text = string.Format("V={0:F2}", vNeck);
+            lblTermDp.Text = string.Format("ΔP={0:F0}Pa", dp);
             lblTermNC.Text = string.Format("NC {0}", nc);
+
+            if (lblBadgeTermSummary != null)
+            {
+                lblBadgeTermSummary.Text = string.Format("Ø{0:F0} • Q={1:F0}m³/h", neckDiaMm, _termFlowUnit == "Ls" ? rawQ * 3.6 : rawQ);
+            }
 
             if (vNeck > 3.5)
             {
                 lblTermVneck.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EF4444"));
                 borderTermResult.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EF4444"));
                 lblTermWarning.Visibility = Visibility.Visible;
-            }
-            else if (vNeck > 2.8)
-            {
-                lblTermVneck.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FACC15"));
-                borderTermResult.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#334155"));
-                lblTermWarning.Visibility = Visibility.Collapsed;
             }
             else
             {
@@ -554,6 +590,7 @@ namespace HvacPalette
             string prefix = _currentLayer.Label != null && _currentLayer.Label.Contains("(") ? 
                 _currentLayer.Label.Substring(_currentLayer.Label.IndexOf("(") + 1).Replace(")", "") : "SA";
             bool isMain = chkIsMainDuct.IsChecked == true;
+            _savedIsMainDuct = isMain;
 
             CadExecutor.DrawContinuousDuct(w, h, _currentLayer.Name, layerText, _currentLayer.ColorIndex, prefix, isMain);
         }
@@ -582,11 +619,15 @@ namespace HvacPalette
             if (item != null && item.Tag is double)
             {
                 double hp = (double)item.Tag;
-                if (hp <= 2.0) lblGasPairResult.Text = "Cặp ống: Ø6.35 / Ø12.7 mm";
-                else if (hp <= 3.2) lblGasPairResult.Text = "Cặp ống: Ø9.52 / Ø15.88 mm";
-                else if (hp <= 5.0) lblGasPairResult.Text = "Cặp ống: Ø9.52 / Ø19.05 mm";
-                else if (hp <= 10.0) lblGasPairResult.Text = "Cặp ống: Ø12.7 / Ø28.58 mm";
-                else lblGasPairResult.Text = "Cặp ống: Ø15.88 / Ø34.90 mm";
+                string pair = "Ø9.52 / Ø15.88 mm";
+                if (hp <= 2.0) pair = "Ø6.35 / Ø12.7 mm";
+                else if (hp <= 3.2) pair = "Ø9.52 / Ø15.88 mm";
+                else if (hp <= 5.0) pair = "Ø9.52 / Ø19.05 mm";
+                else if (hp <= 10.0) pair = "Ø12.7 / Ø28.58 mm";
+                else pair = "Ø15.88 / Ø34.90 mm";
+
+                lblGasPairResult.Text = string.Format("Cặp ống: {0}", pair);
+                if (lblBadgeGasSummary != null) lblBadgeGasSummary.Text = string.Format("{0} • {1}HP", pair, hp);
             }
         }
 
@@ -614,6 +655,7 @@ namespace HvacPalette
             double g = rt * 0.605;
             string dn = rt <= 20 ? "DN50" : rt <= 40 ? "DN65" : rt <= 75 ? "DN80" : rt <= 130 ? "DN100" : "DN150";
             lblChillerDnResult.Text = string.Format("{0} (G = {1:F1} m³/h)", dn, g);
+            if (lblBadgeChillerSummary != null) lblBadgeChillerSummary.Text = string.Format("{0} • {1:F0}RT", dn, rt);
         }
 
         private void BtnDrawChiller_Click(object sender, RoutedEventArgs e)

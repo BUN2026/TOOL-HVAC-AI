@@ -22,7 +22,7 @@ namespace HvacPalette
                 Editor ed = doc.Editor;
                 if (ed != null)
                 {
-                    ed.WriteMessage("\n[HVAC Plugin] Đã nạp thành công! Gõ 'HVAC' hoặc 'HVAC_PALETTE' để mở bảng điều khiển.\n");
+                    ed.WriteMessage("\n[BUN-HVAC-DESIGN] Đã nạp thành công! Gõ 'BUN_HVAC' hoặc 'HVAC' để mở bảng điều khiển.\n");
                 }
             }
         }
@@ -36,24 +36,25 @@ namespace HvacPalette
             }
         }
 
+        [CommandMethod("BUN_HVAC")]
         [CommandMethod("HVAC")]
         [CommandMethod("HVAC_PALETTE")]
         public void ShowHvacPalette()
         {
             if (_paletteSet == null)
             {
-                _paletteSet = new PaletteSet("HVAC DESIGN PALETTE (ASHRAE 2001)", new Guid("D3C8A972-2B41-4E6E-99C1-72BF5A31E5F8"))
+                _paletteSet = new PaletteSet("BUN-HVAC-DESIGN", new Guid("D3C8A972-2B41-4E6E-99C1-72BF5A31E5F8"))
                 {
                     Style = PaletteSetStyles.ShowAutoHideButton |
                             PaletteSetStyles.ShowCloseButton |
                             PaletteSetStyles.ShowPropertiesMenu,
-                    MinimumSize = new System.Drawing.Size(320, 500),
-                    Size = new System.Drawing.Size(360, 680),
+                    MinimumSize = new System.Drawing.Size(280, 320),
+                    Size = new System.Drawing.Size(350, 580),
                     Dock = DockSides.Right
                 };
 
                 _hvacControl = new HvacPaletteControl();
-                _paletteSet.AddVisual("Thiết Kế HVAC", _hvacControl);
+                _paletteSet.AddVisual("BUN-HVAC-DESIGN", _hvacControl);
             }
 
             _paletteSet.Visible = true;

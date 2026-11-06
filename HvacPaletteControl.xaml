@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             d:DesignHeight="850" d:DesignWidth="360"
+             d:DesignHeight="700" d:DesignWidth="350"
              Background="#0B0F19" Foreground="#F8FAFC" FontFamily="Segoe UI" FontSize="12">
     
     <UserControl.Resources>
@@ -21,7 +21,7 @@
                         <Border Background="{TemplateBinding Background}" 
                                 BorderBrush="{TemplateBinding BorderBrush}" 
                                 BorderThickness="{TemplateBinding BorderThickness}" 
-                                CornerRadius="6">
+                                CornerRadius="5">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
@@ -39,29 +39,40 @@
             <Setter Property="Background" Value="#111827"/>
             <Setter Property="Foreground" Value="#F8FAFC"/>
             <Setter Property="BorderBrush" Value="#334155"/>
-            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="Padding" Value="3,2"/>
+        </Style>
+
+        <Style TargetType="Expander">
+            <Setter Property="Background" Value="#0F172A"/>
+            <Setter Property="Foreground" Value="#F8FAFC"/>
+            <Setter Property="BorderBrush" Value="#1E293B"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+            <Setter Property="Padding" Value="6"/>
         </Style>
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel Margin="8">
+        <StackPanel Margin="6">
             
-            <!-- HEADER -->
-            <Border Background="#111827" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,8">
+            <!-- HEADER: BUN-HVAC-DESIGN -->
+            <Border Background="#111827" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="8" Padding="8" Margin="0,0,0,6">
                 <StackPanel>
-                    <TextBlock Text="HVAC DESIGN • ASHRAE 2001" Foreground="#94A3B8" FontSize="10" FontWeight="Bold"/>
-                    <TextBlock x:Name="txtHeaderTitle" Text="TÍNH TOÁN &amp; THIẾT KẾ MEP" Foreground="#38BDF8" FontSize="14" FontWeight="Black" Margin="0,2,0,6"/>
+                    <DockPanel Margin="0,0,0,4">
+                        <TextBlock Text="BUN-HVAC-DESIGN" Foreground="#38BDF8" FontSize="13" FontWeight="Black" FontFamily="Consolas" VerticalAlignment="Center"/>
+                        <TextBlock Text="ASHRAE 2001" Foreground="#64748B" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    </DockPanel>
                     
                     <!-- COMPACT LAYER SELECTOR -->
                     <DockPanel LastChildFill="True">
-                        <TextBlock Text="🏷️ Layer:" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,6,0" FontWeight="SemiBold"/>
+                        <TextBlock Text="🏷️ Layer:" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,4,0" FontSize="11" FontWeight="SemiBold"/>
                         <ComboBox x:Name="cboLayerSelect" SelectionChanged="CboLayerSelect_SelectionChanged"/>
                     </DockPanel>
                 </StackPanel>
             </Border>
 
-            <!-- 5 SUBSYSTEM TABS -->
-            <UniformGrid Columns="5" Margin="0,0,0,8">
+            <!-- 5 SUBSYSTEM TABS (THANH NGANG ĐIỀU HƯỚNG) -->
+            <UniformGrid Columns="5" Margin="0,0,0,6">
                 <Button x:Name="btnCatDuct" Content="🌪️ Gió" Click="BtnCat_Click" Tag="duct" Margin="1" Background="#0284C7"/>
                 <Button x:Name="btnCatGas" Content="❄️ Gas" Click="BtnCat_Click" Tag="gas" Margin="1"/>
                 <Button x:Name="btnCatChiller" Content="🏢 Chiller" Click="BtnCat_Click" Tag="chiller" Margin="1"/>
@@ -72,125 +83,113 @@
             <!-- ===================== PANEL 1: DUCT DESIGN ===================== -->
             <StackPanel x:Name="panelDuct" Visibility="Visible">
                 
-                <!-- A. ASHRAE CALCULATOR BOX (TUYẾN ỐNG THẲNG) -->
-                <Border Background="#0F172A" BorderBrush="#0284C7" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,8">
-                    <StackPanel>
-                        <DockPanel Margin="0,0,0,6">
-                            <TextBlock Text="⚡ A. TÍNH CHỌN ỐNG GIÓ ASHRAE 2001" Foreground="#38BDF8" FontWeight="Bold"/>
-                            <TextBlock Text="ρ = 1.204" Foreground="#64748B" HorizontalAlignment="Right" FontFamily="Consolas"/>
+                <!-- THANH NGANG 1: ỐNG THẲNG ASHRAE (EXPANDER) -->
+                <Expander x:Name="expDuctStraight" IsExpanded="True" Expanded="Expander_StateChanged" Collapsed="Expander_StateChanged">
+                    <Expander.Header>
+                        <DockPanel LastChildFill="True" Margin="0,2">
+                            <Border DockPanel.Dock="Right" Background="#082F49" BorderBrush="#0284C7" BorderThickness="1" CornerRadius="4" Padding="4,1" Margin="4,0,0,0">
+                                <TextBlock x:Name="lblBadgeDuctSummary" Text="400x250 • 0.83Pa/m" Foreground="#38BDF8" FontSize="10" FontFamily="Consolas" FontWeight="Bold"/>
+                            </Border>
+                            <TextBlock Text="⚡ 1. Ống Thẳng ASHRAE" Foreground="#F8FAFC" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
                         </DockPanel>
+                    </Expander.Header>
 
-                        <!-- AIRFLOW Q + UNIT SWITCH -->
+                    <StackPanel Margin="0,6,0,0">
+                        <!-- Q & UNIT -->
                         <Grid Margin="0,0,0,6">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="50"/>
+                                <ColumnDefinition Width="45"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Lưu lượng Q:" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBox x:Name="txtFlowValue" Grid.Column="1" Text="1200" Background="#111827" Foreground="#F8FAFC" 
-                                     BorderBrush="#334155" Padding="4" FontFamily="Consolas" FontWeight="Bold" TextAlignment="Center" TextChanged="TxtFlowValue_TextChanged"/>
-                            <Button x:Name="btnFlowUnit" Grid.Column="2" Content="m³/h" Margin="2,0,0,0" Click="BtnFlowUnit_Click" Background="#0369A1"/>
+                            <TextBlock Text="Q:" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBox x:Name="txtFlowValue" Grid.Column="1" Text="1200" Background="#111827" Foreground="#F8FAFC" BorderBrush="#334155" Padding="3" FontFamily="Consolas" FontWeight="Bold" TextAlignment="Center" TextChanged="TxtFlowValue_TextChanged"/>
+                            <Button x:Name="btnFlowUnit" Grid.Column="2" Content="m³/h" Margin="2,0,0,0" Click="BtnFlowUnit_Click" Background="#0369A1" FontSize="10"/>
                         </Grid>
 
-                        <!-- METHOD: EQUAL FRICTION VS VELOCITY -->
+                        <!-- METHOD -->
                         <Grid Margin="0,0,0,6">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <RadioButton x:Name="rbMethodFriction" Content="Ma sát (Pa/m)" IsChecked="True" Foreground="#CBD5E1" Checked="RbMethod_Checked" Margin="0,0,4,0"/>
-                            <RadioButton x:Name="rbMethodVelocity" Grid.Column="1" Content="Vận tốc (m/s)" Foreground="#CBD5E1" Checked="RbMethod_Checked"/>
+                            <RadioButton x:Name="rbMethodFriction" Content="Ma sát (Pa/m)" IsChecked="True" Foreground="#CBD5E1" Checked="RbMethod_Checked" Margin="0,0,4,0" FontSize="11"/>
+                            <RadioButton x:Name="rbMethodVelocity" Grid.Column="1" Content="Vận tốc (m/s)" Foreground="#CBD5E1" Checked="RbMethod_Checked" FontSize="11"/>
                         </Grid>
+                        <ComboBox x:Name="cboCriteriaValue" SelectionChanged="CboCriteriaValue_SelectionChanged" Margin="0,0,0,6"/>
 
-                        <ComboBox x:Name="cboCriteriaValue" SelectionChanged="CboCriteriaValue_SelectionChanged" Margin="0,0,0,8"/>
-
-                        <!-- RESULT DISPLAY & FREE WxH ADJUSTMENT -->
-                        <Border x:Name="borderResultBox" Background="#020617" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="8" Margin="0,0,0,8">
+                        <!-- W x H RESULT & FREE ADJUSTMENT -->
+                        <Border x:Name="borderResultBox" Background="#020617" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="6" Margin="0,0,0,6">
                             <StackPanel>
                                 <DockPanel Margin="0,0,0,4">
-                                    <TextBlock Text="KÍCH THƯỚC ĐỀ XUẤT (W × H):" Foreground="#94A3B8" FontSize="11" FontWeight="Bold"/>
-                                    <TextBlock x:Name="lblAspectRatio" Text="W/H: 1.6:1 (Chuẩn)" Foreground="#4ADE80" HorizontalAlignment="Right" FontSize="11" FontWeight="Bold" FontFamily="Consolas"/>
+                                    <TextBlock Text="KÍCH THƯỚC (W × H):" Foreground="#94A3B8" FontSize="10" FontWeight="Bold"/>
+                                    <TextBlock x:Name="lblAspectRatio" Text="W/H: 1.6:1" Foreground="#4ADE80" HorizontalAlignment="Right" FontSize="10" FontWeight="Bold" FontFamily="Consolas"/>
                                 </DockPanel>
 
-                                <Grid Margin="0,0,0,6">
+                                <Grid Margin="0,0,0,4">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <DockPanel Margin="0,0,4,0">
-                                        <TextBlock Text="Rộng:" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                    <DockPanel Margin="0,0,2,0">
+                                        <TextBlock Text="W:" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,2,0" FontSize="11"/>
                                         <ComboBox x:Name="cboWidth" SelectionChanged="CboSize_SelectionChanged"/>
                                     </DockPanel>
-                                    <DockPanel Grid.Column="1" Margin="4,0,0,0">
-                                        <TextBlock Text="Cao:" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                    <DockPanel Grid.Column="1" Margin="2,0,0,0">
+                                        <TextBlock Text="H:" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,2,0" FontSize="11"/>
                                         <ComboBox x:Name="cboHeight" SelectionChanged="CboSize_SelectionChanged"/>
                                     </DockPanel>
                                 </Grid>
 
-                                <!-- DETAILED HYDRAULICS (TÔ ĐỎ NẾU NGOÀI VÙNG CHUẨN) -->
-                                <UniformGrid Columns="2" Margin="0,0,0,4">
-                                    <TextBlock x:Name="lblResultV" Text="V = 4.44 m/s" Foreground="#4ADE80" FontWeight="Bold" FontFamily="Consolas"/>
-                                    <TextBlock x:Name="lblResultPv" Text="Pv = 11.88 Pa" Foreground="#38BDF8" FontWeight="Bold" FontFamily="Consolas"/>
-                                    <TextBlock x:Name="lblResultDh" Text="Dh = Ø308 mm" Foreground="#94A3B8" FontFamily="Consolas"/>
-                                    <TextBlock x:Name="lblResultDpf" Text="ΔPf = 0.83 Pa/m" Foreground="#4ADE80" FontWeight="Bold" FontFamily="Consolas"/>
+                                <UniformGrid Columns="4" Margin="0,2,0,0">
+                                    <TextBlock x:Name="lblResultV" Text="V=4.44" Foreground="#4ADE80" FontWeight="Bold" FontFamily="Consolas" FontSize="10" TextAlignment="Center"/>
+                                    <TextBlock x:Name="lblResultPv" Text="Pv=11.8" Foreground="#38BDF8" FontWeight="Bold" FontFamily="Consolas" FontSize="10" TextAlignment="Center"/>
+                                    <TextBlock x:Name="lblResultDh" Text="Ø308" Foreground="#94A3B8" FontFamily="Consolas" FontSize="10" TextAlignment="Center"/>
+                                    <TextBlock x:Name="lblResultDpf" Text="0.83P/m" Foreground="#4ADE80" FontWeight="Bold" FontFamily="Consolas" FontSize="10" TextAlignment="Center"/>
                                 </UniformGrid>
 
-                                <!-- WARNING NOTICE (CẢNH BÁO TÔ ĐỎ, KHÔNG BẮT BUỘC) -->
-                                <TextBlock x:Name="txtWarningNotice" Text="⚠️ CẢNH BÁO: Thông số vượt chuẩn thiết kế" Foreground="#EF4444" FontWeight="Bold" FontSize="10" Visibility="Collapsed" Margin="0,2,0,0"/>
+                                <TextBlock x:Name="txtWarningNotice" Text="⚠️ CẢNH BÁO: Thông số vượt chuẩn" Foreground="#EF4444" FontWeight="Bold" FontSize="10" Visibility="Collapsed" Margin="0,3,0,0" TextAlignment="Center"/>
                             </StackPanel>
                         </Border>
 
-                        <!-- TUYẾN CHỌN: ỐNG CHÍNH (KÈM TIỀN TỐ) HAY ỐNG NHÁNH (CHỈ SIZE) -->
-                        <CheckBox x:Name="chkIsMainDuct" Content="Tuyến ống chính (Kèm tiền tố SA/RA)" IsChecked="True" Foreground="#CBD5E1" Margin="2,0,0,8" FontWeight="SemiBold"/>
+                        <CheckBox x:Name="chkIsMainDuct" Content="Tuyến chính (SA 600x400)" IsChecked="True" Foreground="#CBD5E1" Margin="0,0,0,6" FontSize="11"/>
 
-                        <!-- FITTING LOSS CALCULATOR (FORMULA 30: dPj = Co * Pv) -->
-                        <Border Background="#020617" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="6" Margin="0,0,0,8">
-                            <StackPanel>
-                                <TextBlock Text="🛡️ TỔN THẤT PHỤ KIỆN: ΔPj = Co × Pv (CT 30)" Foreground="#F59E0B" FontWeight="Bold" FontSize="10" Margin="0,0,0,4"/>
-                                <ComboBox x:Name="cboFittingType" SelectionChanged="CboFittingType_SelectionChanged" Margin="0,0,0,4"/>
-                                <DockPanel>
-                                    <TextBlock Text="Tổn thất phụ kiện:" Foreground="#94A3B8" FontSize="11"/>
-                                    <TextBlock x:Name="lblFittingLoss" Text="ΔPj = 2.61 Pa" Foreground="#F59E0B" FontWeight="Bold" FontFamily="Consolas" HorizontalAlignment="Right"/>
-                                </DockPanel>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- ACTION BUTTONS: DRAW CONTINUOUS DUCT -->
+                        <!-- BUTTONS -->
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="2*"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Button x:Name="btnDrawDuct" Content="✏️ Vẽ Tuyến Liên Tục" Background="#0284C7" Margin="0,0,4,0" Click="BtnDrawDuct_Click"/>
+                            <Button x:Name="btnDrawDuct" Content="✏️ Vẽ Tuyến Liên Tục" Background="#0284C7" Margin="0,0,3,0" Click="BtnDrawDuct_Click"/>
                             <Button x:Name="btnDrawFlex" Grid.Column="1" Content="Ống mềm" Click="BtnDrawFlex_Click"/>
                         </Grid>
                     </StackPanel>
-                </Border>
+                </Expander>
 
-                <!-- B. TÍNH CHỌN MIỆNG GIÓ & GÁN LƯU LƯỢNG (ASLI / TROX) -->
-                <Border Background="#0F172A" BorderBrush="#4338CA" BorderThickness="1" CornerRadius="8" Padding="8" Margin="0,0,0,8">
-                    <StackPanel>
-                        <DockPanel Margin="0,0,0,6">
-                            <TextBlock Text="🌀 B. TÍNH CHỌN MIỆNG GIÓ &amp; GÁN LƯU LƯỢNG" Foreground="#818CF8" FontWeight="Bold" FontSize="11"/>
-                            <Button x:Name="btnCopyFlow" Content="= Q_ống/4" Click="BtnCopyFlow_Click" HorizontalAlignment="Right" Padding="4,1" FontSize="10" Background="#1E1B4B" Foreground="#A5B4FC"/>
+                <!-- THANH NGANG 2: TÍNH CHỌN MIỆNG GIÓ (EXPANDER) -->
+                <Expander x:Name="expTerminal" IsExpanded="False" Expanded="Expander_StateChanged" Collapsed="Expander_StateChanged">
+                    <Expander.Header>
+                        <DockPanel LastChildFill="True" Margin="0,2">
+                            <Border DockPanel.Dock="Right" Background="#1E1B4B" BorderBrush="#4338CA" BorderThickness="1" CornerRadius="4" Padding="4,1" Margin="4,0,0,0">
+                                <TextBlock x:Name="lblBadgeTermSummary" Text="Ø200 • Q=300m³/h" Foreground="#A5B4FC" FontSize="10" FontFamily="Consolas" FontWeight="Bold"/>
+                            </Border>
+                            <TextBlock Text="🌀 2. Tính Chọn Miệng Gió" Foreground="#F8FAFC" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
                         </DockPanel>
+                    </Expander.Header>
 
-                        <!-- Q and Target Vneck -->
+                    <StackPanel Margin="0,6,0,0">
                         <Grid Margin="0,0,0,6">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <DockPanel Margin="0,0,4,0">
-                                <Button x:Name="btnTermFlowUnit" Content="m³/h" DockPanel.Dock="Right" Width="42" Click="BtnTermFlowUnit_Click" Background="#312E81" Foreground="#C7D2FE" FontWeight="Bold"/>
+                            <DockPanel Margin="0,0,2,0">
+                                <Button x:Name="btnTermFlowUnit" Content="m³/h" DockPanel.Dock="Right" Width="40" Click="BtnTermFlowUnit_Click" Background="#312E81" Foreground="#C7D2FE" FontSize="10"/>
                                 <TextBox x:Name="txtTermFlow" Text="300" TextChanged="TxtTermFlow_TextChanged" Background="#111827" Foreground="#F8FAFC" BorderBrush="#334155" Padding="3" VerticalContentAlignment="Center" FontFamily="Consolas" FontWeight="Bold" TextAlignment="Center"/>
                             </DockPanel>
-                            <ComboBox x:Name="cboTargetVneck" Grid.Column="1" SelectionChanged="CboTargetVneck_SelectionChanged" Margin="4,0,0,0"/>
+                            <ComboBox x:Name="cboTargetVneck" Grid.Column="1" SelectionChanged="CboTargetVneck_SelectionChanged" Margin="2,0,0,0"/>
                         </Grid>
 
-                        <!-- Block selection -->
-                        <TextBlock Text="Chọn loại miệng gió (DXF Thư viện):" Foreground="#94A3B8" FontSize="10" Margin="0,0,0,2"/>
                         <ComboBox x:Name="cboTerminalBlock" SelectionChanged="CboTerminalBlock_SelectionChanged" Margin="0,0,0,6"/>
 
                         <!-- Result Box: Face & Neck selection -->
@@ -201,108 +200,150 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <StackPanel Margin="0,0,4,0">
-                                        <TextBlock Text="Mặt ngoài:" Foreground="#64748B" FontSize="10"/>
-                                        <ComboBox x:Name="cboTermFace" SelectionChanged="CboTermManual_SelectionChanged"/>
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="1" Margin="4,0,0,0">
-                                        <TextBlock Text="Cổ (Neck):" Foreground="#64748B" FontSize="10"/>
-                                        <ComboBox x:Name="cboTermNeck" SelectionChanged="CboTermManual_SelectionChanged"/>
-                                    </StackPanel>
+                                    <ComboBox x:Name="cboTermFace" SelectionChanged="CboTermManual_SelectionChanged" Margin="0,0,2,0"/>
+                                    <ComboBox x:Name="cboTermNeck" Grid.Column="1" SelectionChanged="CboTermManual_SelectionChanged" Margin="2,0,0,0"/>
                                 </Grid>
-
                                 <UniformGrid Columns="3" Margin="0,2,0,0">
-                                    <TextBlock x:Name="lblTermVneck" Text="V=2.65 m/s" Foreground="#4ADE80" FontWeight="Bold" FontFamily="Consolas" TextAlignment="Center" FontSize="11"/>
-                                    <TextBlock x:Name="lblTermDp" Text="ΔP=14.2 Pa" Foreground="#38BDF8" FontWeight="Bold" FontFamily="Consolas" TextAlignment="Center" FontSize="11"/>
-                                    <TextBlock x:Name="lblTermNC" Text="NC 24" Foreground="#818CF8" FontWeight="Bold" FontFamily="Consolas" TextAlignment="Center" FontSize="11"/>
+                                    <TextBlock x:Name="lblTermVneck" Text="V=2.65" Foreground="#4ADE80" FontWeight="Bold" FontFamily="Consolas" TextAlignment="Center" FontSize="10"/>
+                                    <TextBlock x:Name="lblTermDp" Text="ΔP=14Pa" Foreground="#38BDF8" FontWeight="Bold" FontFamily="Consolas" TextAlignment="Center" FontSize="10"/>
+                                    <TextBlock x:Name="lblTermNC" Text="NC 24" Foreground="#818CF8" FontWeight="Bold" FontFamily="Consolas" TextAlignment="Center" FontSize="10"/>
                                 </UniformGrid>
-                                
-                                <TextBlock x:Name="lblTermWarning" Text="⚠️ CẢNH BÁO: Vneck > 3.5 m/s gây ồn gió" Foreground="#EF4444" FontWeight="Bold" FontSize="10" Visibility="Collapsed" Margin="0,4,0,0" TextAlignment="Center"/>
+                                <TextBlock x:Name="lblTermWarning" Text="⚠️ Vneck > 3.5 m/s gây ồn gió" Foreground="#EF4444" FontWeight="Bold" FontSize="9" Visibility="Collapsed" Margin="0,3,0,0" TextAlignment="Center"/>
                             </StackPanel>
                         </Border>
 
-                        <!-- Options -->
-                        <CheckBox x:Name="chkAssignXData" Content="Gán XData lưu lượng (Q, Neck) phục vụ Auto-Connect" IsChecked="True" Foreground="#CBD5E1" FontSize="10" Margin="0,0,0,4"/>
-                        <CheckBox x:Name="chkAttachText" Content="Ghi Text nhãn Q bên cạnh miệng gió" IsChecked="True" Foreground="#CBD5E1" FontSize="10" Margin="0,0,0,6"/>
+                        <CheckBox x:Name="chkAssignXData" Content="Gán XData lưu lượng (Q, Neck)" IsChecked="True" Foreground="#CBD5E1" FontSize="10" Margin="0,0,0,3"/>
+                        <CheckBox x:Name="chkAttachText" Content="Ghi nhãn Q bên cạnh miệng gió" IsChecked="True" Foreground="#CBD5E1" FontSize="10" Margin="0,0,0,6"/>
 
-                        <!-- Action buttons -->
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Button x:Name="btnInsertTerminal" Content="🎯 Chèn Miệng Gió (Gán Q)" Background="#4F46E5" Margin="0,0,3,0" Click="BtnInsertTerminal_Click"/>
-                            <Button x:Name="btnAutoConnect" Grid.Column="1" Content="⚡ Auto Nối Tuyến" Background="#059669" Margin="3,0,0,0" Click="BtnAutoConnect_Click"/>
+                            <Button x:Name="btnInsertTerminal" Content="🎯 Chèn Miệng Gió" Background="#4F46E5" Margin="0,0,2,0" Click="BtnInsertTerminal_Click"/>
+                            <Button x:Name="btnAutoConnect" Grid.Column="1" Content="⚡ Auto Nối Tuyến" Background="#059669" Margin="2,0,0,0" Click="BtnAutoConnect_Click"/>
                         </Grid>
                     </StackPanel>
-                </Border>
+                </Expander>
+
+                <!-- THANH NGANG 3: TỔN THẤT PHỤ KIỆN (EXPANDER) -->
+                <Expander x:Name="expFitting" IsExpanded="False" Expanded="Expander_StateChanged" Collapsed="Expander_StateChanged">
+                    <Expander.Header>
+                        <DockPanel LastChildFill="True" Margin="0,2">
+                            <Border DockPanel.Dock="Right" Background="#451A03" BorderBrush="#B45309" BorderThickness="1" CornerRadius="4" Padding="4,1" Margin="4,0,0,0">
+                                <TextBlock x:Name="lblBadgeFittingSummary" Text="Co 90° • ΔPj=2.6Pa" Foreground="#FBBF24" FontSize="10" FontFamily="Consolas" FontWeight="Bold"/>
+                            </Border>
+                            <TextBlock Text="🛡️ 3. Tổn Thất Phụ Kiện" Foreground="#F8FAFC" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Expander.Header>
+
+                    <StackPanel Margin="0,6,0,0">
+                        <ComboBox x:Name="cboFittingType" SelectionChanged="CboFittingType_SelectionChanged" Margin="0,0,0,6"/>
+                        <DockPanel Background="#020617" LastChildFill="True">
+                            <TextBlock Text="Tổn thất ΔPj:" Foreground="#94A3B8" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="lblFittingLoss" Text="ΔPj = 2.61 Pa" Foreground="#F59E0B" FontWeight="Bold" FontFamily="Consolas" HorizontalAlignment="Right" FontSize="11"/>
+                        </DockPanel>
+                    </StackPanel>
+                </Expander>
             </StackPanel>
 
             <!-- ===================== PANEL 2: GAS DESIGN ===================== -->
             <StackPanel x:Name="panelGas" Visibility="Collapsed">
-                <Border Background="#0F172A" BorderBrush="#A21CAF" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,8">
-                    <StackPanel>
-                        <TextBlock Text="⚡ CHỌN SIZE ỐNG GAS THEO CÔNG SUẤT (HP)" Foreground="#E879F9" FontWeight="Bold" Margin="0,0,0,6"/>
+                <Expander x:Name="expGas" IsExpanded="True" Expanded="Expander_StateChanged" Collapsed="Expander_StateChanged">
+                    <Expander.Header>
+                        <DockPanel LastChildFill="True" Margin="0,2">
+                            <Border DockPanel.Dock="Right" Background="#4A044E" BorderBrush="#A21CAF" BorderThickness="1" CornerRadius="4" Padding="4,1" Margin="4,0,0,0">
+                                <TextBlock x:Name="lblBadgeGasSummary" Text="Ø9.52/15.88 • 3.0 HP" Foreground="#F472B6" FontSize="10" FontFamily="Consolas" FontWeight="Bold"/>
+                            </Border>
+                            <TextBlock Text="❄️ Tuyến Ống Gas VRV / Split" Foreground="#F8FAFC" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Expander.Header>
+
+                    <StackPanel Margin="0,6,0,0">
                         <ComboBox x:Name="cboGasHp" Margin="0,0,0,6" SelectionChanged="CboGasHp_SelectionChanged"/>
-                        <Border Background="#020617" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="6" Margin="0,0,0,8">
-                            <TextBlock x:Name="lblGasPairResult" Text="Cặp ống: Ø9.52 / Ø15.88 mm" Foreground="#F472B6" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        <Border Background="#020617" BorderBrush="#334155" BorderThickness="1" CornerRadius="5" Padding="5" Margin="0,0,0,6">
+                            <TextBlock x:Name="lblGasPairResult" Text="Cặp ống: Ø9.52 / Ø15.88 mm" Foreground="#F472B6" FontWeight="Bold" HorizontalAlignment="Center" FontSize="11"/>
                         </Border>
                         <UniformGrid Columns="2">
                             <Button Content="✏️ Vẽ Cặp Ống Gas" Margin="0,0,2,0" Background="#9333EA" Click="BtnDrawGas_Click"/>
-                            <Button Content="🔀 Chèn Bộ Chia Ga" Margin="2,0,0,0" Click="BtnInsertBlock_Click" Tag="BUN_BOCHIAGA.dxf"/>
+                            <Button Content="🔀 Bộ Chia Ga" Margin="2,0,0,0" Click="BtnInsertBlock_Click" Tag="BUN_BOCHIAGA.dxf"/>
                         </UniformGrid>
                     </StackPanel>
-                </Border>
+                </Expander>
             </StackPanel>
 
             <!-- ===================== PANEL 3: CHILLER DESIGN ===================== -->
             <StackPanel x:Name="panelChiller" Visibility="Collapsed">
-                <Border Background="#0F172A" BorderBrush="#1D4ED8" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,8">
-                    <StackPanel>
-                        <TextBlock Text="⚡ TÍNH CHỌN ỐNG THEO TẢI LẠNH (RT / TON)" Foreground="#60A5FA" FontWeight="Bold" Margin="0,0,0,6"/>
+                <Expander x:Name="expChiller" IsExpanded="True" Expanded="Expander_StateChanged" Collapsed="Expander_StateChanged">
+                    <Expander.Header>
+                        <DockPanel LastChildFill="True" Margin="0,2">
+                            <Border DockPanel.Dock="Right" Background="#172554" BorderBrush="#1D4ED8" BorderThickness="1" CornerRadius="4" Padding="4,1" Margin="4,0,0,0">
+                                <TextBlock x:Name="lblBadgeChillerSummary" Text="DN80 • 50 RT" Foreground="#60A5FA" FontSize="10" FontFamily="Consolas" FontWeight="Bold"/>
+                            </Border>
+                            <TextBlock Text="🏢 Tuyến Cấp / Hồi Chiller" Foreground="#F8FAFC" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Expander.Header>
+
+                    <StackPanel Margin="0,6,0,0">
                         <Grid Margin="0,0,0,6">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Tải lạnh RT:" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBox x:Name="txtChillerRt" Grid.Column="1" Text="50" Background="#111827" Foreground="#F8FAFC" BorderBrush="#334155" Padding="4" FontFamily="Consolas" TextChanged="TxtChillerRt_TextChanged"/>
+                            <TextBlock Text="Tải RT:" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBox x:Name="txtChillerRt" Grid.Column="1" Text="50" Background="#111827" Foreground="#F8FAFC" BorderBrush="#334155" Padding="3" FontFamily="Consolas" TextChanged="TxtChillerRt_TextChanged"/>
                         </Grid>
-                        <Border Background="#020617" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="6" Margin="0,0,0,8">
-                            <TextBlock x:Name="lblChillerDnResult" Text="DN80 (G = 30.2 m³/h)" Foreground="#60A5FA" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        <Border Background="#020617" BorderBrush="#334155" BorderThickness="1" CornerRadius="5" Padding="5" Margin="0,0,0,6">
+                            <TextBlock x:Name="lblChillerDnResult" Text="DN80 (G = 30.2 m³/h)" Foreground="#60A5FA" FontWeight="Bold" HorizontalAlignment="Center" FontSize="11"/>
                         </Border>
-                        <Button Content="✏️ Vẽ Tuyến Cấp / Hồi Chiller" Background="#2563EB" Click="BtnDrawChiller_Click"/>
+                        <Button Content="✏️ Vẽ Tuyến CHW" Background="#2563EB" Click="BtnDrawChiller_Click"/>
                     </StackPanel>
-                </Border>
+                </Expander>
             </StackPanel>
 
             <!-- ===================== PANEL 4: WATER DRAINAGE ===================== -->
             <StackPanel x:Name="panelWater" Visibility="Collapsed">
-                <Border Background="#0F172A" BorderBrush="#0D9488" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,8">
-                    <StackPanel>
-                        <TextBlock Text="⚡ THIẾT KẾ ĐỘ DỐC NƯỚC NGƯNG (i = 1%)" Foreground="#2DD4BF" FontWeight="Bold" Margin="0,0,0,6"/>
+                <Expander x:Name="expWater" IsExpanded="True" Expanded="Expander_StateChanged" Collapsed="Expander_StateChanged">
+                    <Expander.Header>
+                        <DockPanel LastChildFill="True" Margin="0,2">
+                            <Border DockPanel.Dock="Right" Background="#042F2E" BorderBrush="#0D9488" BorderThickness="1" CornerRadius="4" Padding="4,1" Margin="4,0,0,0">
+                                <TextBlock x:Name="lblBadgeWaterSummary" Text="D27 • i = 1%" Foreground="#2DD4BF" FontSize="10" FontFamily="Consolas" FontWeight="Bold"/>
+                            </Border>
+                            <TextBlock Text="💧 Nước Ngưng Dốc 1%" Foreground="#F8FAFC" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Expander.Header>
+
+                    <StackPanel Margin="0,6,0,0">
                         <ComboBox x:Name="cboDrainSize" Margin="0,0,0,6"/>
-                        <Button Content="📐 Vẽ Tuyến Nước Ngưng Dốc 1%" Background="#0D9488" Margin="0,0,0,4" Click="BtnDrawDrain_Click"/>
+                        <Button Content="📐 Vẽ Dốc 1%" Background="#0D9488" Click="BtnDrawDrain_Click"/>
                     </StackPanel>
-                </Border>
+                </Expander>
             </StackPanel>
 
             <!-- ===================== PANEL 5: SIGNAL & BMS ===================== -->
             <StackPanel x:Name="panelSignal" Visibility="Collapsed">
-                <Border Background="#0F172A" BorderBrush="#CA8A04" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,8">
-                    <StackPanel>
-                        <TextBlock Text="⚡ HỆ DÂY ĐIỀU KHIỂN &amp; BMS" Foreground="#FACC15" FontWeight="Bold" Margin="0,0,0,6"/>
-                        <UniformGrid Columns="2" Margin="0,0,0,4">
-                            <Button Content="🔌 Vẽ Dây Tín Hiệu" Margin="0,0,2,0" Background="#CA8A04" Click="BtnDrawSignal_Click"/>
+                <Expander x:Name="expSignal" IsExpanded="True" Expanded="Expander_StateChanged" Collapsed="Expander_StateChanged">
+                    <Expander.Header>
+                        <DockPanel LastChildFill="True" Margin="0,2">
+                            <Border DockPanel.Dock="Right" Background="#422006" BorderBrush="#CA8A04" BorderThickness="1" CornerRadius="4" Padding="4,1" Margin="4,0,0,0">
+                                <TextBlock Text="RS485/BMS" Foreground="#FACC15" FontSize="10" FontFamily="Consolas" FontWeight="Bold"/>
+                            </Border>
+                            <TextBlock Text="⚡ Điều Khiển &amp; BMS" Foreground="#F8FAFC" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Expander.Header>
+
+                    <StackPanel Margin="0,6,0,0">
+                        <UniformGrid Columns="2">
+                            <Button Content="🔌 Nối Thermostat" Margin="0,0,2,0" Background="#CA8A04" Click="BtnDrawSignal_Click"/>
                             <Button Content="📦 Máng Cáp" Margin="2,0,0,0" Click="BtnDrawTray_Click"/>
                         </UniformGrid>
                     </StackPanel>
-                </Border>
+                </Expander>
             </StackPanel>
 
             <!-- STATUS BAR -->
-            <Border Background="#020617" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="6" Margin="0,8,0,0">
-                <TextBlock x:Name="txtStatusMessage" Text="Sẵn sàng thực hiện lệnh AutoCAD." Foreground="#94A3B8" FontSize="11" TextWrapping="Wrap"/>
+            <Border Background="#020617" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="5" Padding="5" Margin="0,4,0,0">
+                <TextBlock x:Name="txtStatusMessage" Text="BUN-HVAC-DESIGN sẵn sàng." Foreground="#94A3B8" FontSize="10" TextWrapping="Wrap"/>
             </Border>
 
         </StackPanel>
