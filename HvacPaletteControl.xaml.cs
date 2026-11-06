@@ -681,5 +681,69 @@ namespace HvacPalette
             if (_currentLayer == null) return;
             txtStatusMessage.Text = "Vẽ máng cáp trunking.";
         }
+
+        private void BtnDrawElbow_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentLayer == null) return;
+            txtStatusMessage.Text = "Chèn Co 90°.";
+        }
+
+        private void BtnDrawReducer_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentLayer == null) return;
+            txtStatusMessage.Text = "Chèn Côn thu.";
+        }
+
+        private void BtnDrawTee_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentLayer == null) return;
+            txtStatusMessage.Text = "Chèn Tê rẽ nhánh.";
+        }
+
+        private void CboDamperType_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (cboDamperType == null || cboDamperType.SelectedItem == null || lblBadgeDamperSummary == null) return;
+            ComboBoxItem item = cboDamperType.SelectedItem as ComboBoxItem;
+            if (item != null)
+            {
+                string tag = item.Tag != null ? item.Tag.ToString() : "VCD";
+                lblBadgeDamperSummary.Text = string.Format("{0} • Tay Gạt", tag);
+            }
+        }
+
+        private void BtnInsertDamper_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentLayer == null) return;
+            txtStatusMessage.Text = "Chèn van gió lên tuyến.";
+        }
+
+        private void BtnInsertSilencer_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentLayer == null) return;
+            txtStatusMessage.Text = "Chèn hộp tiêu âm.";
+        }
+
+        private void BtnAutoConnectAll_Click(object sender, RoutedEventArgs e)
+        {
+            BtnAutoConnect_Click(sender, e);
+        }
+
+        private void BtnTagDuct_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentLayer == null) return;
+            txtStatusMessage.Text = "Đánh nhãn toàn tuyến ống.";
+        }
+
+        private void BtnAutoThermostat_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentLayer == null) return;
+            txtStatusMessage.Text = "Nối dây Thermostat.";
+        }
+
+        private void BtnBmsIoList_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentLayer == null) return;
+            txtStatusMessage.Text = "Xuất bảng BMS I/O List.";
+        }
     }
 }
