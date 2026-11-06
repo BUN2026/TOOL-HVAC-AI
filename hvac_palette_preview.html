@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HVAC Palette Pro - ASHRAE 2001 Standard Edition</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: #020617; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+
+    .cad-cmd-btn {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+    
+    .cad-cmd-btn.is-active {
+      background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%) !important;
+      color: #020617 !important;
+      font-weight: 800 !important;
+      border-color: #67e8f9 !important;
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.7), 0 0 35px rgba(59, 130, 246, 0.35) !important;
+      transform: translateY(-2px) scale(1.02);
+      z-index: 10;
+    }
+
+    .cad-cmd-btn.is-active * {
+      color: #020617 !important;
+    }
+
+    .has-active-cmd .cad-cmd-btn:not(.is-active) {
+      opacity: 0.65;
+    }
+    .has-active-cmd .cad-cmd-btn:not(.is-active):hover {
+      opacity: 0.95;
+    }
+
+    .active-badge { display: none; }
+    .is-active .active-badge { display: inline-flex; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 antialiased p-2 select-none min-h-screen font-sans">
+
+  <!-- Main Container -->
+  <div id="paletteRoot" class="max-w-xl mx-auto rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden flex flex-col">
+    
+    <!-- 1. HEADER WITH COMPACT LAYER SELECTOR -->
+    <div class="p-3 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800 space-y-2">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div id="hudSysIndicatorDot" class="w-3.5 h-3.5 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.8)] animate-pulse"></div>
+          <div>
+            <span class="text-[12px] font-bold text-slate-400 uppercase tracking-widest block">HVAC DESIGN & CALCULATION • ASHRAE 2001</span>
+            <span id="hudSysTitle" class="text-sm font-black text-cyan-400">CHUẨN TỔN THẤT ASHRAE FUNDAMENTALS CH.34</span>
+          </div>
+        </div>
+        <span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-[12px] font-mono text-cyan-300 font-bold">CAD .NET</span>
+      </div>
+
+      <!-- Compact Layer Selector -->
+      <div class="flex items-center gap-2 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800 text-xs">
+        <span class="text-slate-400 font-semibold whitespace-nowrap pl-1 text-[12px]">🏷️ Layer:</span>
+        <select id="selLayerDropdown" onchange="onLayerDropdownChange(this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-cyan-300 font-mono font-semibold focus:outline-none focus:border-cyan-400">
+        </select>
+      </div>
+    </div>
+
+    <!-- 2. 5 HẠNG MỤC CHÍNH CỦA HỆ HVAC -->
+    <div class="bg-slate-950 p-2 border-b border-slate-800">
+      <div class="grid grid-cols-5 gap-1 text-xs text-center font-medium">
+        <button id="catBtn_duct" onclick="switchCategory('duct')" class="cad-cmd-btn is-active py-2 px-1 rounded-xl border border-cyan-500/40 font-bold flex flex-col items-center gap-1">
+          <span class="text-base">🌪️</span>
+          <span class="truncate w-full text-[12px]">1. Ống Gió</span>
+        </button>
+        <button id="catBtn_gas" onclick="switchCategory('gas')" class="cad-cmd-btn py-2 px-1 bg-slate-900 text-slate-400 hover:text-white rounded-xl border border-slate-800 flex flex-col items-center gap-1">
+          <span class="text-base">❄️</span>
+          <span class="truncate w-full text-[12px]">2. Ống Gas</span>
+        </button>
+        <button id="catBtn_chiller" onclick="switchCategory('chiller')" class="cad-cmd-btn py-2 px-1 bg-slate-900 text-slate-400 hover:text-white rounded-xl border border-slate-800 flex flex-col items-center gap-1">
+          <span class="text-base">🏢</span>
+          <span class="truncate w-full text-[12px]">3. Chiller</span>
+        </button>
+        <button id="catBtn_water" onclick="switchCategory('water')" class="cad-cmd-btn py-2 px-1 bg-slate-900 text-slate-400 hover:text-white rounded-xl border border-slate-800 flex flex-col items-center gap-1">
+          <span class="text-base">💧</span>
+          <span class="truncate w-full text-[12px]">4. Ống Nước</span>
+        </button>
+        <button id="catBtn_signal" onclick="switchCategory('signal')" class="cad-cmd-btn py-2 px-1 bg-slate-900 text-slate-400 hover:text-white rounded-xl border border-slate-800 flex flex-col items-center gap-1">
+          <span class="text-base">⚡</span>
+          <span class="truncate w-full text-[12px]">5. Tín Hiệu</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. NỘI DUNG TÍNH TOÁN KỸ THUẬT (ASHRAE FUNDAMENTALS 2001 COMPLIANT) -->
+    <div class="p-3.5 space-y-3.5 max-h-[520px] overflow-y-auto">
+      
+      <!-- HẠNG MỤC 1: ỐNG GIÓ & TÍNH TOÁN TỔN THẤT ASHRAE 2001 -->
+      <div id="ws_duct" class="space-y-3 text-xs">
+        
+        <!-- PHẦN A: TÍNH CHỌN TUYẾN ỐNG THẲNG THEO ASHRAE -->
+        <div class="bg-gradient-to-r from-cyan-950/40 to-slate-950 p-3 rounded-xl border border-cyan-800/40 space-y-3">
+          
+          <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+            <span class="font-bold text-cyan-300 flex items-center gap-1.5 uppercase text-[12px]">
+              <span>⚡</span> A. TÍNH CHỌN ỐNG THẲNG THEO ASHRAE 2001 (CT 8, 19, 21, 23, 24)
+            </span>
+            <span class="text-[12px] text-slate-400 font-mono">ρ = 1.204 kg/m³</span>
+          </div>
+
+          <!-- 1. Hàng Lưu Lượng Q (Hỗ trợ m3/h hoặc L/s) -->
+          <div class="grid grid-cols-12 gap-2 items-center">
+            <div class="col-span-5">
+              <label class="text-slate-400 block mb-1">Lưu lượng khí tuyến (Q):</label>
+              <div class="flex items-center bg-slate-900 border border-slate-700 rounded-lg overflow-hidden">
+                <input type="number" id="inDuctFlow" value="1200" oninput="runDuctCalculation()" class="w-full bg-transparent px-2.5 py-1 text-slate-200 font-mono font-bold text-sm focus:outline-none" />
+                <button onclick="toggleFlowUnit()" id="btnFlowUnit" class="px-2 py-1 bg-cyan-600/30 text-cyan-300 font-mono font-bold border-l border-slate-700 hover:bg-cyan-600/50 transition-all text-xs">
+                  m³/h
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. Phương án Tính Toán: Ma Sát (Pa/m) vs Vận Tốc (m/s) -->
+            <div class="col-span-7">
+              <div class="flex justify-between items-center mb-1">
+                <label class="text-slate-400">Phương pháp khống chế:</label>
+                <div class="flex gap-1 text-[12px]">
+                  <button id="btnMethodFriction" onclick="setCalcMethod('friction')" class="px-2 py-0.5 rounded bg-cyan-500 text-slate-950 font-bold">Ma sát (Pa/m)</button>
+                  <button id="btnMethodVelocity" onclick="setCalcMethod('velocity')" class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-medium hover:text-white">Vận tốc (m/s)</button>
+                </div>
+              </div>
+
+              <div id="boxFrictionInput">
+                <select id="selFrictionValue" onchange="runDuctCalculation()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-slate-200 font-mono font-medium">
+                  <option value="0.65">0.65 Pa/m (Êm dịu / Khách sạn)</option>
+                  <option value="0.80" selected>0.80 Pa/m (Chuẩn Văn phòng ASHRAE / TCVN)</option>
+                  <option value="1.00">1.00 Pa/m (Kinh tế / Tối ưu kích thước)</option>
+                  <option value="1.20">1.20 Pa/m (Tốc độ cao / Trục chính)</option>
+                </select>
+              </div>
+              <div id="boxVelocityInput" class="hidden">
+                <select id="selVelocityValue" onchange="runDuctCalculation()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-slate-200 font-mono font-medium">
+                  <option value="2.5">2.5 m/s (Cổ miệng gió)</option>
+                  <option value="4.0">4.0 m/s (Nhánh miệng gió)</option>
+                  <option value="5.5">5.5 m/s (Ống nhánh chính)</option>
+                  <option value="7.0" selected>7.0 m/s (Ống trục chính)</option>
+                  <option value="8.5">8.5 m/s (Trục kỹ thuật đứng)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. KẾT QUẢ ĐẦY ĐỦ + CẢNH BÁO TÔ ĐỎ NẾU NGOÀI VÙNG CHUẨN + TỰ DO CHỈNH W - H -->
+          <div id="boxResultContainer" class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2.5 transition-all">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-bold text-slate-200 uppercase tracking-wide">KẾT QUẢ &amp; ĐIỀU CHỈNH TỰ DO (W × H):</span>
+              <span id="badgeAspectRatio" class="px-2 py-0.5 rounded font-mono font-bold text-[12px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                W/H: 1.6 : 1 (Chuẩn)
+              </span>
+            </div>
+
+            <!-- Tự do điều chỉnh W và H -->
+            <div class="grid grid-cols-12 gap-2 items-center">
+              <div class="col-span-6 flex items-center gap-1.5">
+                <span class="text-slate-400 whitespace-nowrap">Rộng W:</span>
+                <select id="p1Width" onchange="onManualSizeChange()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-cyan-300 font-mono font-bold text-sm">
+                  <option value="150">150</option><option value="200">200</option><option value="250">250</option><option value="300">300</option>
+                  <option value="350">350</option><option value="400" selected>400</option><option value="450">450</option><option value="500">500</option>
+                  <option value="600">600</option><option value="700">700</option><option value="800">800</option><option value="1000">1000</option><option value="1200">1200</option>
+                </select>
+                <span class="text-slate-500 font-mono">mm</span>
+              </div>
+
+              <div class="col-span-6 flex items-center gap-1.5">
+                <span class="text-slate-400 whitespace-nowrap">Cao H:</span>
+                <select id="p1Height" onchange="onManualSizeChange()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-cyan-300 font-mono font-bold text-sm">
+                  <option value="150">150</option><option value="200">200</option><option value="250" selected>250</option>
+                  <option value="300">300</option><option value="350">350</option><option value="400">400</option>
+                  <option value="500">500</option><option value="600">600</option><option value="800">800</option>
+                </select>
+                <span class="text-slate-500 font-mono">mm</span>
+              </div>
+            </div>
+
+            <!-- BẢNG THÔNG SỐ VẬT LÝ CHI TIẾT (TÔ ĐỎ KHI NGOÀI VÙNG TIÊU CHUẨN) -->
+            <div class="grid grid-cols-5 gap-1.5 bg-slate-900/90 p-2 rounded-lg border border-slate-800 text-center font-mono text-[12px]">
+              <div class="p-1 rounded bg-slate-950/60 border border-slate-800">
+                <span class="text-slate-500 block text-[11px]">Vận tốc V</span>
+                <span id="resVelocity" class="text-emerald-400 font-bold">4.44 m/s</span>
+              </div>
+              <div class="p-1 rounded bg-slate-950/60 border border-slate-800">
+                <span class="text-slate-500 block text-[11px]">Áp suất Pv</span>
+                <span id="resPv" class="text-sky-300 font-bold">11.88 Pa</span>
+              </div>
+              <div class="p-1 rounded bg-slate-950/60 border border-slate-800">
+                <span class="text-slate-500 block text-[11px]">Đ.kính Dh</span>
+                <span id="resDh" class="text-cyan-300 font-bold">Ø308 mm</span>
+              </div>
+              <div class="p-1 rounded bg-slate-950/60 border border-slate-800">
+                <span class="text-slate-500 block text-[11px]">Hệ số f</span>
+                <span id="resFrictionFactor" class="text-amber-300 font-bold">0.0215</span>
+              </div>
+              <div class="p-1 rounded bg-slate-950/60 border border-slate-800">
+                <span class="text-slate-500 block text-[11px]">ΔPf/m</span>
+                <span id="resFrictionDrop" class="text-emerald-400 font-bold">0.83 Pa/m</span>
+              </div>
+            </div>
+
+            <!-- DÒNG CẢNH BÁO TÔ ĐỎ (CHỈ CẢNH BÁO, KHÔNG ÉP BUỘC) -->
+            <div id="boxWarningText" class="hidden p-2 rounded-lg bg-red-950/40 border border-red-500/40 text-red-400 font-semibold text-xs flex items-center gap-1.5">
+              <span>⚠️</span>
+              <span id="txtWarningMsg">CẢNH BÁO: Vận tốc hoặc Tổn thất vượt ngưỡng tiêu chuẩn</span>
+            </div>
+          </div>
+
+          <!-- LỰA CHỌN QUY CÁCH TEXT: ỐNG CHÍNH (TIỀN TỐ SA/RA) HAY ỐNG NHÁNH (CHỈ SIZE) -->
+          <div class="p-2 bg-slate-950 rounded-lg border border-slate-800 flex items-center justify-between text-xs">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="chkIsMainDuct" checked class="accent-cyan-400 w-4 h-4 rounded cursor-pointer" />
+              <span class="text-slate-200 font-semibold">Tuyến ống chính (Ghi: "SA 600x400")</span>
+            </label>
+            <span class="text-[12px] text-slate-400">Bỏ chọn: chỉ ghi "400x250"</span>
+          </div>
+
+          <!-- Nút Thao Tác Vẽ Liên Tục -->
+          <div class="grid grid-cols-3 gap-2 pt-1">
+            <button onclick="triggerDrawing('HVAC_DRAW_RECT_DUCT', 'Vẽ tuyến ống liên tục & Gắn Text chuẩn')" class="cad-cmd-btn py-2 px-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-sm col-span-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              <span>Vẽ Ống Gió Liên Tục</span>
+              <span class="active-badge w-1.5 h-1.5 rounded-full bg-slate-950 animate-ping"></span>
+            </button>
+            <button onclick="triggerDrawing('HVAC_DRAW_FLEX_DUCT', 'Vẽ ống mềm')" class="cad-cmd-btn py-2 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-lg text-xs border border-slate-700 flex items-center justify-center gap-1">
+              <span>Ống mềm</span>
+              <span class="active-badge w-1.5 h-1.5 rounded-full bg-slate-950 animate-ping"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- PHẦN B: TÍNH CHỌN MIỆNG GIÓ & GÁN LƯU LƯỢNG (ASLI / TROX / ASHRAE) -->
+        <div class="bg-gradient-to-r from-indigo-950/40 via-slate-900 to-slate-950 p-3 rounded-xl border border-indigo-700/50 space-y-3">
+          
+          <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+            <span class="font-bold text-indigo-300 flex items-center gap-1.5 uppercase text-[12px]">
+              <span>🌀</span> B. TÍNH CHỌN MIỆNG GIÓ &amp; GÁN LƯU LƯỢNG (BLOCK DXF)
+            </span>
+            <span class="text-[12px] text-indigo-400 font-mono font-bold">ASLI / TROX Standard</span>
+          </div>
+
+          <!-- 1. Lưu Lượng Miệng Gió Q (m3/h hoặc L/s) & Vận Tốc Cổ Mục Tiêu -->
+          <div class="grid grid-cols-12 gap-2 items-center">
+            <div class="col-span-6">
+              <div class="flex justify-between items-center mb-1">
+                <label class="text-slate-400">Lưu lượng miệng gió (Q):</label>
+                <button onclick="copyDuctFlowToTerminal()" class="text-[11px] text-cyan-400 hover:underline">
+                  = Q_ống/4
+                </button>
+              </div>
+              <div class="flex items-center bg-slate-900 border border-slate-700 rounded-lg overflow-hidden">
+                <input type="number" id="inTerminalFlow" value="300" oninput="runTerminalCalculation()" class="w-full bg-transparent px-2.5 py-1 text-indigo-200 font-mono font-bold text-sm focus:outline-none" />
+                <button onclick="toggleTerminalFlowUnit()" id="btnTerminalFlowUnit" class="px-2 py-1 bg-indigo-600/30 text-indigo-300 font-mono font-bold border-l border-slate-700 hover:bg-indigo-600/50 transition-all text-xs">
+                  m³/h
+                </button>
+              </div>
+            </div>
+
+            <div class="col-span-6">
+              <label class="text-slate-400 block mb-1">Vận tốc cổ mục tiêu (Vneck):</label>
+              <select id="selTargetVneck" onchange="runTerminalCalculation()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-slate-200 font-mono text-xs">
+                <option value="2.0">2.0 m/s (Rất êm / NC 20)</option>
+                <option value="2.5" selected>2.5 m/s (Chuẩn VP / NC 25)</option>
+                <option value="3.0">3.0 m/s (Thương mại / NC 30)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 2. Danh Mục 5 Block Miệng Gió Thực Tế Trong Thư Viện -->
+          <div class="space-y-1">
+            <label class="text-slate-400 block">Chọn loại miệng gió (Thư viện DXF):</label>
+            <select id="selTerminalBlock" onchange="onTerminalTypeChanged()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-indigo-300 font-mono font-semibold text-xs">
+              <option value="BUN_Mieng gio khuyech tan 4 huong.dxf" data-type="4way" selected>Khuếch tán 4 hướng (BUN_Mieng gio khuyech tan 4 huong.dxf)</option>
+              <option value="BUN_Mieng gio khuyech tan tron.dxf" data-type="round">Khuếch tán tròn (BUN_Mieng gio khuyech tan tron.dxf)</option>
+              <option value="BUN_Mieng gio nan don.dxf" data-type="linear">Miệng gió nan đơn (BUN_Mieng gio nan don.dxf)</option>
+              <option value="BUN_Mieng gio sot trung.dxf" data-type="eggcrate">Miệng gió hồi sọt trứng (BUN_Mieng gio sot trung.dxf)</option>
+              <option value="BUN_Mieng gio louver.dxf" data-type="louver">Miệng gió Louver ngoài trời (BUN_Mieng gio louver.dxf)</option>
+            </select>
+          </div>
+
+          <!-- 3. Kết Quả Kỹ Thuật Đề Xuất & Cho Phép Tùy Chỉnh Tự Do -->
+          <div id="boxTerminalResultBox" class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-2 transition-all">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-bold text-slate-300 uppercase tracking-wide">ĐỀ XUẤT CỠ MẶT &amp; CỔ (TÙY CHỈNH TỰ DO):</span>
+              <span id="badgeTerminalStatus" class="px-2 py-0.5 rounded font-mono font-bold text-[11px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                NC 24 (Êm)
+              </span>
+            </div>
+
+            <div class="grid grid-cols-12 gap-2 items-center">
+              <div class="col-span-6 flex items-center gap-1.5">
+                <span class="text-slate-400 whitespace-nowrap">Mặt ngoài:</span>
+                <select id="selTerminalFaceSize" onchange="onManualTerminalChange()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-indigo-300 font-mono font-bold text-xs">
+                  <option value="600x600" selected>600 × 600</option>
+                  <option value="450x450">450 × 450</option>
+                  <option value="300x300">300 × 300</option>
+                  <option value="1200x150">1200 × 150</option>
+                  <option value="1000x200">1000 × 200</option>
+                </select>
+              </div>
+
+              <div class="col-span-6 flex items-center gap-1.5">
+                <span class="text-slate-400 whitespace-nowrap">Cổ (Neck):</span>
+                <select id="selTerminalNeckDia" onchange="onManualTerminalChange()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-cyan-300 font-mono font-bold text-xs">
+                  <option value="150">Ø150 mm</option>
+                  <option value="200" selected>Ø200 mm</option>
+                  <option value="250">Ø250 mm</option>
+                  <option value="300">Ø300 mm</option>
+                  <option value="350">Ø350 mm</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Bảng thông số thủy lực của miệng gió (Vneck, dP, NC) -->
+            <div class="grid grid-cols-3 gap-1.5 bg-slate-900/90 p-1.5 rounded-lg border border-slate-800 text-center font-mono text-[12px]">
+              <div class="p-1 rounded bg-slate-950/60 border border-slate-800">
+                <span class="text-slate-500 block text-[11px]">Vận tốc cổ Vneck</span>
+                <span id="resTerminalVneck" class="text-emerald-400 font-bold">2.65 m/s</span>
+              </div>
+              <div class="p-1 rounded bg-slate-950/60 border border-slate-800">
+                <span class="text-slate-500 block text-[11px]">Tổn thất áp ΔP</span>
+                <span id="resTerminalDp" class="text-sky-300 font-bold">14.2 Pa</span>
+              </div>
+              <div class="p-1 rounded bg-slate-950/60 border border-slate-800">
+                <span class="text-slate-500 block text-[11px]">Độ ồn ước tính</span>
+                <span id="resTerminalNC" class="text-indigo-300 font-bold">NC 24</span>
+              </div>
+            </div>
+
+            <!-- Dòng cảnh báo tô đỏ nếu Vneck > 3.5 m/s -->
+            <div id="boxTerminalWarning" class="hidden p-2 rounded-lg bg-red-950/40 border border-red-500/40 text-red-400 font-semibold text-xs flex items-center gap-1.5">
+              <span>⚠️</span>
+              <span id="txtTerminalWarningMsg">CẢNH BÁO: Vận tốc cổ > 3.5 m/s gây ồn gió, nên tăng cỡ cổ</span>
+            </div>
+          </div>
+
+          <!-- 4. Tùy Chọn Gán Dữ Liệu Tự Động Phục Vụ Auto-Connect Sau Này -->
+          <div class="p-2 bg-slate-950/80 rounded-lg border border-slate-800 space-y-1.5 text-xs">
+            <div class="flex items-center justify-between">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="chkAssignXData" checked class="accent-indigo-400 w-4 h-4 rounded cursor-pointer" />
+                <span class="text-indigo-200 font-semibold">Gán XData lưu lượng (Q, Neck) để Auto-Connect</span>
+              </label>
+              <span class="text-[11px] font-mono text-indigo-400">RegApp: HVAC_DIFFUSER</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="chkAssignAttr" checked class="accent-cyan-400 w-4 h-4 rounded cursor-pointer" />
+                <span class="text-slate-300 font-medium">Cập nhật Attribute: "600x600 - Ø200 (Q=300m³/h)"</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 5. Các Nút Hành Động: Chèn Miệng Gió & Auto Nối -->
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button onclick="insertAirTerminalAction()" class="cad-cmd-btn py-2 px-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-sm">
+              <span>🎯 Chèn Miệng Gió (Gán Q)</span>
+              <span class="active-badge w-1.5 h-1.5 rounded-full bg-slate-950 animate-ping"></span>
+            </button>
+            <button onclick="triggerDrawing('HVAC_AUTO_CONNECT_TERMINAL', 'Auto Nối: Miệng gió -> Ống chính')" class="cad-cmd-btn py-2 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-sm">
+              <span>⚡ Auto Nối Tuyến</span>
+              <span class="active-badge w-1.5 h-1.5 rounded-full bg-slate-950 animate-ping"></span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- HẠNG MỤC 2: ỐNG GAS -->
+      <div id="ws_gas" class="hidden space-y-3 text-xs">
+        <div class="bg-gradient-to-r from-fuchsia-950/40 to-slate-950 p-3 rounded-xl border border-fuchsia-800/40 space-y-2.5">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-fuchsia-300 uppercase text-[12px]">⚡ CHỌN SIZE ỐNG GAS THEO CÔNG SUẤT MÁY</span>
+            <span class="text-[12px] text-slate-400 font-mono">Daikin/VRV Specs</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-slate-400 block mb-1">Công suất dàn (HP):</label>
+              <select id="selGasCapacity" onchange="autoSelectGasSize(this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-slate-200 font-mono">
+                <option value="1.5">1.5 - 2.0 HP (FCU Nhỏ)</option>
+                <option value="3.0" selected>2.5 - 3.2 HP (FCU Vừa)</option>
+                <option value="5.0">4.0 - 5.0 HP (FCU Lớn)</option>
+                <option value="10.0">8.0 - 10.0 HP (Dàn nóng VRV)</option>
+                <option value="16.0">12.0 - 16.0 HP (Module VRV)</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-slate-400 block mb-1">Cặp ống tự động tra:</label>
+              <div id="lblGasPairDisplay" class="bg-slate-900 border border-fuchsia-500/40 rounded-lg px-2 py-1 text-fuchsia-300 font-mono font-bold text-center">
+                Ø9.52 / Ø15.88 mm
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="triggerDrawing('HVAC_DRAW_GAS_PAIR', 'Vẽ cặp ống gas song song')" class="cad-cmd-btn py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-fuchsia-300 font-bold rounded-xl flex items-center justify-center gap-1.5">
+            <span>✏️ Vẽ Cặp Ống Gas</span>
+            <span class="active-badge w-1.5 h-1.5 rounded-full bg-slate-950 animate-ping"></span>
+          </button>
+          <button onclick="triggerDrawing('INSERT BUN_BOCHIAGA.dxf', 'Chèn Bộ chia ga Refnet Joint')" class="cad-cmd-btn py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold rounded-xl flex items-center justify-center gap-1.5">
+            <span>🔀 Chèn Bộ Chia Ga</span>
+            <span class="active-badge w-1.5 h-1.5 rounded-full bg-slate-950 animate-ping"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- HẠNG MỤC 3: CHILLER -->
+      <div id="ws_chiller" class="hidden space-y-3 text-xs">
+        <div class="bg-gradient-to-r from-blue-950/40 to-slate-950 p-3 rounded-xl border border-blue-800/40 space-y-2.5">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-blue-300 uppercase text-[12px]">⚡ TÍNH CHỌN ỐNG THEO TẢI LẠNH (TON / RT)</span>
+            <span class="text-[12px] text-slate-400 font-mono">ΔT = 5°C</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-slate-400 block mb-1">Tải lạnh (Ton / RT):</label>
+              <input type="number" id="inChillerRT" value="50" onchange="autoCalcChillerDN(this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-slate-200 font-mono text-center" />
+            </div>
+            <div>
+              <label class="text-slate-400 block mb-1">Cỡ ống DN & Lưu lượng:</label>
+              <div id="lblChillerDNDisplay" class="bg-slate-900 border border-blue-500/40 rounded-lg px-2 py-1 text-blue-300 font-mono font-bold text-center">
+                DN80 (12.0 m³/h)
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="triggerDrawing('HVAC_DRAW_CHILLER_PAIR', 'Vẽ cặp ống Chiller Cấp/Hồi')" class="cad-cmd-btn py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-blue-300 font-bold rounded-xl flex items-center justify-center gap-1.5">
+            <span>✏️ Vẽ Tuyến Cấp / Hồi</span>
+            <span class="active-badge w-1.5 h-1.5 rounded-full bg-slate-950 animate-ping"></span>
+          </button>
+          <button onclick="triggerDrawing('HVAC_CHILLER_VALVE_PACKAGE', 'Chèn cụm van Chiller')" class="cad-cmd-btn py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold rounded-xl flex items-center justify-center gap-1.5">
+            <span>🛡️ Cụm Van & Lọc Y</span>
+            <span class="active-badge w-1.5 h-1.5 rounded-full bg-slate-950 animate-ping"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- HẠNG MỤC 4: ỐNG NƯỚC NGƯNG -->
+      <div id="ws_water" class="hidden space-y-3 text-xs">
+        <div class="bg-gradient-to-r from-teal-950/40 to-slate-950 p-3 rounded-xl border border-teal-800/40 space-y-2.5">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-teal-300 uppercase text-[12px]">⚡ TỰ ĐỘNG TÍNH TOÁN ĐỘ DỐC NƯỚC NGƯNG</span>
+            <span class="text-[12px] text-teal-400 font-mono font-bold">i = 1% (~10mm/m)</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-slate-400 block mb-1">Cỡ ống PVC:</label>
+              <select id="selDrainSize" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-teal-300 font-mono font-bold">
+                <option>D21 (1 FCU nhỏ)</option>
+                <option selected>D27 (1-2 FCU)</option>
+                <option>D34 (Gom 3-4 FCU)</option>
+                <option>D42 (Ống trục gom)</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-slate-400 block mb-1">Cao độ khởi đầu:</label>
+              <input type="text" value="+2750" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-slate-200 font-mono text-center" />
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="triggerDrawing('HVAC_DRAW_DRAIN_SLOPE', 'Vẽ tuyến dốc 1%')" class="cad-cmd-btn py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-teal-300 font-bold rounded-xl flex items-center justify-center gap-1.5">
+            <span>📐 Vẽ Tuyến Dốc 1%</span>
+            <span class="active-badge w-1.5 h-1.5 rounded-full bg-slate-950 animate-ping"></span>
+          </button>
+          <button onclick="triggerDrawing('HVAC_INSERT_UTRAP', 'Chèn bẫy U-Trap')" class="cad-cmd-btn py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold rounded-xl flex items-center justify-center gap-1.5">
+            <span>🪤 Chèn Bẫy U-Trap</span>
+            <span class="active-badge w-1.5 h-1.5 rounded-full bg-slate-950 animate-ping"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- HẠNG MỤC 5: TÍN HIỆU & BMS -->
+      <div id="ws_signal" class="hidden space-y-3 text-xs">
+        <div class="bg-gradient-to-r from-yellow-950/40 to-slate-950 p-3 rounded-xl border border-yellow-800/40 space-y-2.5">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-yellow-300 uppercase text-[12px]">⚡ THIẾT KẾ ĐIỀU KHIỂN & MẠNG TRUYỀN THÔNG BMS</span>
+            <span class="text-[12px] text-slate-400 font-mono">RS485 / Modbus</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="triggerDrawing('HVAC_GENERATE_BMS_IO_LIST', 'Xuất I/O Point List BMS')" class="cad-cmd-btn p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-left">
+              <span class="text-yellow-400 font-bold block">📋 Xuất Bảng I/O List</span>
+              <span class="text-[12px] text-slate-400">Đếm số điểm DI/DO/AI/AO</span>
+            </button>
+            <button onclick="triggerDrawing('HVAC_AUTO_LOOP_THERMOSTAT', 'Tự động nối dây Thermostat')" class="cad-cmd-btn p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-left">
+              <span class="text-yellow-400 font-bold block">🔗 Auto Nối Thermostat</span>
+              <span class="text-[12px] text-slate-400">Từ FCU ra công tắc tường</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 4. BOTTOM STATUS BAR -->
+    <div class="p-2.5 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-xs">
+      <div class="flex items-center gap-2 overflow-hidden">
+        <div id="statusBadge" class="flex items-center gap-1.5 px-2 py-0.5 rounded-md font-mono font-bold text-[12px] whitespace-nowrap border bg-cyan-500/20 text-cyan-300 border-cyan-500/40">
+          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+          <span id="txtStatusAction">LỆNH ĐANG CHẠY</span>
+        </div>
+        <span id="txtCmdLog" class="font-mono text-slate-300 truncate font-semibold">Sẵn sàng vẽ tuyến liên tục &amp; tính chọn miệng gió</span>
+      </div>
+      
+      <button onclick="cancelCmd()" class="px-2.5 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded text-[12px] font-mono font-bold ml-2 transition-all flex items-center gap-1">
+        <span>ESC (Hủy)</span>
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    const FULL_LAYER_DATABASE = {
+      duct: [
+        { name: "M-AC air duct supply", color: 50, hex: "#38bdf8", label: "Cấp lạnh (SA)" },
+        { name: "M-AC air duct return", color: 30, hex: "#f87171", label: "Hồi lạnh (RA)" },
+        { name: "M-AC air duct fresh", color: 100, hex: "#34d399", label: "Gió tươi AC (OA)" },
+        { name: "M-AC air duct exhaust", color: 10, hex: "#fbbf24", label: "Gió thải AC (EA)" },
+        { name: "M-MV air duct fresh", color: 190, hex: "#a78bfa", label: "TG Cấp tươi (MV-FA)" },
+        { name: "M-MV air duct exhaust", color: 150, hex: "#f472b6", label: "TG Hút thải (MV-EA)" },
+        { name: "M-F air duct fresh", color: 170, hex: "#fb923c", label: "Tăng áp buồng thang (F-PA)" },
+        { name: "M-F air duct exhaust", color: 160, hex: "#e11d48", label: "Hút khói sự cố (F-SE)" }
+      ],
+      gas: [
+        { name: "M-AC ref pipe", color: 220, hex: "#c084fc", label: "Ống đồng Gas (VRV/Split)" }
+      ],
+      chiller: [
+        { name: "M-CW sup pipe", color: 140, hex: "#60a5fa", label: "Nước lạnh cấp (CHWS)" },
+        { name: "M-CW ret pipe", color: 150, hex: "#3b82f6", label: "Nước lạnh hồi (CHWR)" }
+      ],
+      water: [
+        { name: "M-AC cond drain pipe", color: 130, hex: "#2dd4bf", label: "Ống thoát nước ngưng" }
+      ],
+      signal: [
+        { name: "M-AC control wiring", color: 40, hex: "#facc15", label: "Dây tín hiệu điều khiển" }
+      ]
+    };
+
+    let activeCategory = 'duct';
+    let activeLayer = FULL_LAYER_DATABASE.duct[0];
+    let flowUnit = 'm3h'; // 'm3h' | 'Ls'
+    let terminalFlowUnit = 'm3h'; // 'm3h' | 'Ls'
+    let calcMethod = 'friction'; // 'friction' | 'velocity'
+
+    // ==========================================
+    // KHÍ ĐỘNG HỌC ỐNG GIÓ (ASHRAE 2001)
+    // ==========================================
+    function toggleFlowUnit() {
+      const inputEl = document.getElementById('inDuctFlow');
+      const btn = document.getElementById('btnFlowUnit');
+      let val = parseFloat(inputEl.value) || 0;
+
+      if (flowUnit === 'm3h') {
+        flowUnit = 'Ls';
+        btn.textContent = 'L/s';
+        btn.className = "px-2 py-1 bg-amber-500/30 text-amber-300 font-mono font-bold border-l border-slate-700 hover:bg-amber-500/50 transition-all text-xs";
+        inputEl.value = Math.round(val / 3.6);
+      } else {
+        flowUnit = 'm3h';
+        btn.textContent = 'm³/h';
+        btn.className = "px-2 py-1 bg-cyan-600/30 text-cyan-300 font-mono font-bold border-l border-slate-700 hover:bg-cyan-600/50 transition-all text-xs";
+        inputEl.value = Math.round(val * 3.6);
+      }
+      runDuctCalculation();
+    }
+
+    function setCalcMethod(method) {
+      calcMethod = method;
+      document.getElementById('boxFrictionInput').classList.toggle('hidden', method !== 'friction');
+      document.getElementById('boxVelocityInput').classList.toggle('hidden', method !== 'velocity');
+
+      document.getElementById('btnMethodFriction').className = method === 'friction' 
+        ? "px-2 py-0.5 rounded bg-cyan-500 text-slate-950 font-bold" 
+        : "px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-medium hover:text-white";
+      document.getElementById('btnMethodVelocity').className = method === 'velocity' 
+        ? "px-2 py-0.5 rounded bg-cyan-500 text-slate-950 font-bold" 
+        : "px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-medium hover:text-white";
+
+      runDuctCalculation();
+    }
+
+    function calcPv(V) {
+      return 1.204 * Math.pow(V, 2) / 2;
+    }
+
+    function calcDh(w, h) {
+      return (2 * w * h) / (w + h);
+    }
+
+    function calcRe(Dh, V) {
+      return 66.4 * Dh * V;
+    }
+
+    function calcFrictionFactor(Dh, Re) {
+      const epsilon = 0.09;
+      const f_prime = 0.11 * Math.pow((epsilon / Dh) + (68 / Re), 0.25);
+      return f_prime >= 0.018 ? f_prime : (0.85 * f_prime + 0.0028);
+    }
+
+    function calcDuctPressureDropPerMeter(w, h, flowM3s) {
+      const area = (w / 1000) * (h / 1000);
+      const V = flowM3s / area;
+      const Dh = calcDh(w, h);
+      const Re = calcRe(Dh, V);
+      const f = calcFrictionFactor(Dh, Re);
+      const Pv = calcPv(V);
+      const dPf_per_m = 1000 * (f / Dh) * Pv;
+      return { V, Dh, Re, f, Pv, dPf_per_m };
+    }
+
+    function runDuctCalculation() {
+      let rawFlow = parseFloat(document.getElementById('inDuctFlow').value) || 0;
+      const flowM3s = flowUnit === 'Ls' ? (rawFlow / 1000) : (rawFlow / 3600);
+      if (flowM3s <= 0) return;
+
+      const standardSizesW = [150, 200, 250, 300, 350, 400, 450, 500, 600, 700, 800, 1000, 1200];
+      const standardSizesH = [150, 200, 250, 300, 350, 400, 500, 600, 800];
+
+      let targetW = 400, targetH = 250;
+      let minDiff = 999999;
+
+      if (calcMethod === 'velocity') {
+        const targetV = parseFloat(document.getElementById('selVelocityValue').value) || 6.0;
+        const targetArea = flowM3s / targetV;
+        standardSizesW.forEach(w => {
+          standardSizesH.forEach(h => {
+            const area = (w / 1000) * (h / 1000);
+            const ratio = Math.max(w, h) / Math.min(w, h);
+            if (ratio <= 3.5) {
+              const diff = Math.abs(area - targetArea);
+              if (diff < minDiff) {
+                minDiff = diff;
+                targetW = w;
+                targetH = h;
+              }
+            }
+          });
+        });
+      } else {
+        const targetDp = parseFloat(document.getElementById('selFrictionValue').value) || 0.8;
+        standardSizesW.forEach(w => {
+          standardSizesH.forEach(h => {
+            const ratio = Math.max(w, h) / Math.min(w, h);
+            if (ratio <= 3.5) {
+              const calc = calcDuctPressureDropPerMeter(w, h, flowM3s);
+              const diff = Math.abs(calc.dPf_per_m - targetDp);
+              if (diff < minDiff) {
+                minDiff = diff;
+                targetW = w;
+                targetH = h;
+              }
+            }
+          });
+        });
+      }
+
+      document.getElementById('p1Width').value = targetW.toString();
+      document.getElementById('p1Height').value = targetH.toString();
+
+      updateEngineeringResults(targetW, targetH, flowM3s);
+    }
+
+    function onManualSizeChange() {
+      const w = parseInt(document.getElementById('p1Width').value);
+      const h = parseInt(document.getElementById('p1Height').value);
+      let rawFlow = parseFloat(document.getElementById('inDuctFlow').value) || 0;
+      const flowM3s = flowUnit === 'Ls' ? (rawFlow / 1000) : (rawFlow / 3600);
+
+      updateEngineeringResults(w, h, flowM3s);
+      updateLog(`Tùy chỉnh tự do kích thước W×H = ${w}×${h} mm (Không khóa số liệu)`);
+    }
+
+    function updateEngineeringResults(w, h, flowM3s) {
+      const res = calcDuctPressureDropPerMeter(w, h, flowM3s);
+      const aspectRatio = (Math.max(w, h) / Math.min(w, h)).toFixed(1);
+
+      document.getElementById('resVelocity').textContent = `${res.V.toFixed(2)} m/s`;
+      document.getElementById('resPv').textContent = `${res.Pv.toFixed(2)} Pa`;
+      document.getElementById('resDh').textContent = `Ø${Math.round(res.Dh)} mm`;
+      document.getElementById('resFrictionFactor').textContent = `${res.f.toFixed(4)}`;
+      document.getElementById('resFrictionDrop').textContent = `${res.dPf_per_m.toFixed(2)} Pa/m`;
+
+      let hasWarning = false;
+      let warningReason = [];
+
+      // Vận tốc (Tô đỏ nếu > 8.0 m/s)
+      const vEl = document.getElementById('resVelocity');
+      if (res.V > 8.0) {
+        vEl.className = "text-red-500 font-bold bg-red-950/60 px-1 rounded border border-red-500/50";
+        hasWarning = true;
+        warningReason.push(`V=${res.V.toFixed(1)}m/s quá cao`);
+      } else if (res.V > 6.5) {
+        vEl.className = "text-amber-400 font-bold";
+      } else {
+        vEl.className = "text-emerald-400 font-bold";
+      }
+
+      // Tổn thất ma sát (Tô đỏ nếu > 1.30 Pa/m)
+      const dpEl = document.getElementById('resFrictionDrop');
+      if (res.dPf_per_m > 1.30) {
+        dpEl.className = "text-red-500 font-bold bg-red-950/60 px-1 rounded border border-red-500/50";
+        hasWarning = true;
+        warningReason.push(`ΔPf=${res.dPf_per_m.toFixed(2)}Pa/m vượt chuẩn`);
+      } else if (res.dPf_per_m > 1.05) {
+        dpEl.className = "text-amber-400 font-bold";
+      } else {
+        dpEl.className = "text-emerald-400 font-bold";
+      }
+
+      // Tỉ lệ cạnh (Tô đỏ nếu > 4:1)
+      const badgeRatio = document.getElementById('badgeAspectRatio');
+      if (aspectRatio <= 3.0) {
+        badgeRatio.className = "px-2 py-0.5 rounded font-mono font-bold text-[12px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+        badgeRatio.textContent = `W/H: ${aspectRatio} : 1 (Chuẩn)`;
+      } else if (aspectRatio <= 4.0) {
+        badgeRatio.className = "px-2 py-0.5 rounded font-mono font-bold text-[12px] bg-amber-500/20 text-amber-300 border border-amber-500/30";
+        badgeRatio.textContent = `W/H: ${aspectRatio} : 1 (Khá cao)`;
+      } else {
+        badgeRatio.className = "px-2 py-0.5 rounded font-mono font-bold text-[12px] bg-red-500/20 text-red-400 border border-red-500/50";
+        badgeRatio.textContent = `W/H: ${aspectRatio} : 1 (> 4:1 Vượt chuẩn)`;
+        hasWarning = true;
+        warningReason.push(`Tỉ lệ cạnh ${aspectRatio}:1 quá dẹt`);
+      }
+
+      // Khung cảnh báo
+      const boxContainer = document.getElementById('boxResultContainer');
+      const boxWarn = document.getElementById('boxWarningText');
+      const txtWarn = document.getElementById('txtWarningMsg');
+
+      if (hasWarning) {
+        boxContainer.style.borderColor = "#ef4444";
+        boxWarn.classList.remove('hidden');
+        txtWarn.textContent = `⚠️ CẢNH BÁO THIẾT KẾ: ${warningReason.join(' | ')}`;
+      } else {
+        boxContainer.style.borderColor = "#1e293b";
+        boxWarn.classList.add('hidden');
+      }
+
+      document.getElementById('txtStatusAction').textContent = `${w}×${h} mm`;
+      document.getElementById('txtCmdLog').textContent = `Q=${(flowM3s*3600).toFixed(0)}m³/h | V=${res.V.toFixed(2)}m/s | ΔPf=${res.dPf_per_m.toFixed(2)}Pa/m`;
+    }
+
+    // ==========================================
+    // TÍNH CHỌN & GÁN LƯU LƯỢNG MIỆNG GIÓ (ASLI/TROX)
+    // ==========================================
+    function toggleTerminalFlowUnit() {
+      const inputEl = document.getElementById('inTerminalFlow');
+      const btn = document.getElementById('btnTerminalFlowUnit');
+      let val = parseFloat(inputEl.value) || 0;
+
+      if (terminalFlowUnit === 'm3h') {
+        terminalFlowUnit = 'Ls';
+        btn.textContent = 'L/s';
+        btn.className = "px-2 py-1 bg-amber-500/30 text-amber-300 font-mono font-bold border-l border-slate-700 hover:bg-amber-500/50 transition-all text-xs";
+        inputEl.value = Math.round(val / 3.6);
+      } else {
+        terminalFlowUnit = 'm3h';
+        btn.textContent = 'm³/h';
+        btn.className = "px-2 py-1 bg-indigo-600/30 text-indigo-300 font-mono font-bold border-l border-slate-700 hover:bg-indigo-600/50 transition-all text-xs";
+        inputEl.value = Math.round(val * 3.6);
+      }
+      runTerminalCalculation();
+    }
+
+    function copyDuctFlowToTerminal() {
+      let rawDuctFlow = parseFloat(document.getElementById('inDuctFlow').value) || 0;
+      let qTerm = rawDuctFlow / 4.0;
+      if (flowUnit !== terminalFlowUnit) {
+        if (flowUnit === 'm3h' && terminalFlowUnit === 'Ls') qTerm /= 3.6;
+        if (flowUnit === 'Ls' && terminalFlowUnit === 'm3h') qTerm *= 3.6;
+      }
+      document.getElementById('inTerminalFlow').value = Math.round(qTerm);
+      runTerminalCalculation();
+      updateLog(`Đã chia đều 1/4 lưu lượng ống gió -> Q_miệng = ${Math.round(qTerm)} ${terminalFlowUnit === 'Ls' ? 'L/s' : 'm³/h'}`);
+    }
+
+    function runTerminalCalculation() {
+      let rawQ = parseFloat(document.getElementById('inTerminalFlow').value) || 0;
+      let qM3s = terminalFlowUnit === 'Ls' ? (rawQ / 1000.0) : (rawQ / 3600.0);
+      if (qM3s <= 0) return;
+
+      const targetV = parseFloat(document.getElementById('selTargetVneck').value) || 2.5;
+
+      // Tra kích thước cổ tối ưu theo targetV: A_neck = Q / V
+      const requiredArea = qM3s / targetV;
+      const standardNecks = [150, 200, 250, 300, 350];
+      
+      let bestNeck = 200;
+      let minDiff = 999999;
+      standardNecks.forEach(d => {
+        let area = Math.PI * Math.pow(d / 2000.0, 2);
+        let diff = Math.abs(area - requiredArea);
+        if (diff < minDiff) {
+          minDiff = diff;
+          bestNeck = d;
+        }
+      });
+
+      // Tra mặt phù hợp theo cổ
+      let bestFace = "600x600";
+      if (bestNeck <= 150) bestFace = "300x300";
+      else if (bestNeck <= 200) bestFace = "450x450";
+      else bestFace = "600x600";
+
+      document.getElementById('selTerminalNeckDia').value = bestNeck.toString();
+      document.getElementById('selTerminalFaceSize').value = bestFace;
+
+      updateTerminalHydraulics(bestNeck, qM3s);
+    }
+
+    function onManualTerminalChange() {
+      let neck = parseInt(document.getElementById('selTerminalNeckDia').value);
+      let rawQ = parseFloat(document.getElementById('inTerminalFlow').value) || 0;
+      let qM3s = terminalFlowUnit === 'Ls' ? (rawQ / 1000.0) : (rawQ / 3600.0);
+      updateTerminalHydraulics(neck, qM3s);
+    }
+
+    function onTerminalTypeChanged() {
+      runTerminalCalculation();
+    }
+
+    function updateTerminalHydraulics(neckDiaMm, qM3s) {
+      let areaNeck = Math.PI * Math.pow(neckDiaMm / 2000.0, 2);
+      let vNeck = qM3s / areaNeck;
+      
+      // Tổn thất ASLI / TROX Catalogue ước tính: dP = C * Pv_neck (C ≈ 1.8 - 2.2)
+      let pvNeck = 1.204 * Math.pow(vNeck, 2) / 2.0;
+      let dP = 2.0 * pvNeck;
+      let nc = Math.round(18 + (vNeck * 3.8));
+
+      const vEl = document.getElementById('resTerminalVneck');
+      const dpEl = document.getElementById('resTerminalDp');
+      const ncEl = document.getElementById('resTerminalNC');
+      const warnBox = document.getElementById('boxTerminalWarning');
+      const statusBadge = document.getElementById('badgeTerminalStatus');
+      const resultBox = document.getElementById('boxTerminalResultBox');
+
+      vEl.textContent = `${vNeck.toFixed(2)} m/s`;
+      dpEl.textContent = `${dP.toFixed(1)} Pa`;
+      ncEl.textContent = `NC ${nc}`;
+
+      // TÔ ĐỎ CẢNH BÁO NẾU V_NECK > 3.5 m/s
+      if (vNeck > 3.5) {
+        vEl.className = "text-red-500 font-bold bg-red-950/60 px-1 rounded border border-red-500/50";
+        warnBox.classList.remove('hidden');
+        resultBox.style.borderColor = "#ef4444";
+        statusBadge.className = "px-2 py-0.5 rounded font-mono font-bold text-[11px] bg-red-500/20 text-red-400 border border-red-500/50";
+        statusBadge.textContent = `NC ${nc} (CẢNH BÁO ỒN)`;
+      } else if (vNeck > 2.8) {
+        vEl.className = "text-amber-400 font-bold";
+        warnBox.classList.add('hidden');
+        resultBox.style.borderColor = "#1e293b";
+        statusBadge.className = "px-2 py-0.5 rounded font-mono font-bold text-[11px] bg-amber-500/20 text-amber-300 border border-amber-500/30";
+        statusBadge.textContent = `NC ${nc} (Khá ồn)`;
+      } else {
+        vEl.className = "text-emerald-400 font-bold";
+        warnBox.classList.add('hidden');
+        resultBox.style.borderColor = "#1e293b";
+        statusBadge.className = "px-2 py-0.5 rounded font-mono font-bold text-[11px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+        statusBadge.textContent = `NC ${nc} (Rất êm)`;
+      }
+    }
+
+    function insertAirTerminalAction() {
+      const selBlock = document.getElementById('selTerminalBlock');
+      const blockFile = selBlock.value;
+      const neck = document.getElementById('selTerminalNeckDia').value;
+      const face = document.getElementById('selTerminalFaceSize').value;
+      const rawQ = document.getElementById('inTerminalFlow').value;
+      const unit = terminalFlowUnit === 'Ls' ? 'L/s' : 'm³/h';
+      const assignXData = document.getElementById('chkAssignXData').checked;
+
+      const cmdText = `_INSERT "${blockFile}" -Flow ${rawQ}${unit} -Neck Ø${neck} -Face ${face} -AttachXData=${assignXData}`;
+      triggerDrawing(cmdText, `Chèn ${blockFile} (Cổ Ø${neck}, Q=${rawQ}${unit}) & Gán XData`);
+    }
+
+    // ==========================================
+    // COMMON PALETTE UTILITIES
+    // ==========================================
+    function autoSelectGasSize(hp) {
+      const display = document.getElementById('lblGasPairDisplay');
+      if (hp <= 2.0) display.textContent = "Ø6.35 / Ø12.7 mm (1/4\" - 1/2\")";
+      else if (hp <= 3.2) display.textContent = "Ø9.52 / Ø15.88 mm (3/8\" - 5/8\")";
+      else if (hp <= 5.0) display.textContent = "Ø9.52 / Ø19.05 mm (3/8\" - 3/4\")";
+      else if (hp <= 10.0) display.textContent = "Ø12.7 / Ø22.2 mm (1/2\" - 7/8\")";
+      else display.textContent = "Ø15.88 / Ø28.58 mm (5/8\" - 1-1/8\")";
+      updateLog(`Size Gas HP=${hp} ➔ ${display.textContent}`);
+    }
+
+    function autoCalcChillerDN(rt) {
+      const g = (rt * 0.605).toFixed(1);
+      let dn = rt <= 20 ? "DN50" : rt <= 40 ? "DN65" : rt <= 75 ? "DN80" : rt <= 130 ? "DN100" : "DN150";
+      document.getElementById('lblChillerDNDisplay').textContent = `${dn} (${g} m³/h)`;
+      updateLog(`Chiller RT=${rt} ➔ G=${g} m³/h ➔ ${dn}`);
+    }
+
+    function loadLayersForCategory(catKey) {
+      const layers = FULL_LAYER_DATABASE[catKey];
+      const dropdown = document.getElementById('selLayerDropdown');
+      dropdown.innerHTML = '';
+      layers.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.name;
+        opt.textContent = `[Color ${item.color}] ${item.name} (${item.label})`;
+        dropdown.appendChild(opt);
+      });
+      selectLayer(layers[0]);
+    }
+
+    function onLayerDropdownChange(layerName) {
+      const item = FULL_LAYER_DATABASE[activeCategory].find(l => l.name === layerName);
+      if (item) selectLayer(item);
+    }
+
+    function selectLayer(layerItem) {
+      activeLayer = layerItem;
+      const dot = document.getElementById('hudSysIndicatorDot');
+      dot.style.backgroundColor = layerItem.hex;
+      dot.style.boxShadow = `0 0 12px ${layerItem.hex}`;
+      updateLog(`Đã đặt Layer hiện hành: "${layerItem.name}" (Color ${layerItem.color})`);
+    }
+
+    function switchCategory(catKey) {
+      activeCategory = catKey;
+      ['duct', 'gas', 'chiller', 'water', 'signal'].forEach(k => {
+        const btn = document.getElementById(`catBtn_${k}`);
+        const ws = document.getElementById(`ws_${k}`);
+        if (k === catKey) {
+          btn.className = "cad-cmd-btn is-active py-2 px-1 rounded-xl border border-cyan-500/40 font-bold flex flex-col items-center gap-1";
+          ws.classList.remove('hidden');
+        } else {
+          btn.className = "cad-cmd-btn py-2 px-1 bg-slate-900 text-slate-400 hover:text-white rounded-xl border border-slate-800 flex flex-col items-center gap-1";
+          ws.classList.add('hidden');
+        }
+      });
+      loadLayersForCategory(catKey);
+    }
+
+    function triggerDrawing(cmd, desc) {
+      document.getElementById('paletteRoot').classList.add('has-active-cmd');
+      document.getElementById('txtStatusAction').textContent = cmd;
+      document.getElementById('txtCmdLog').textContent = `${desc} [Layer: ${activeLayer.name}]`;
+    }
+
+    function cancelCmd() {
+      document.getElementById('paletteRoot').classList.remove('has-active-cmd');
+      document.getElementById('txtStatusAction').textContent = 'SẴN SÀNG';
+      document.getElementById('txtCmdLog').textContent = 'Đã hủy lệnh (ESC)';
+    }
+
+    function updateLog(msg) {
+      document.getElementById('txtCmdLog').textContent = msg;
+    }
+
+    // Init onload
+    window.addEventListener('DOMContentLoaded', () => {
+      loadLayersForCategory('duct');
+      runDuctCalculation();
+      runTerminalCalculation();
+    });
+  </script>
+</body>
+</html>

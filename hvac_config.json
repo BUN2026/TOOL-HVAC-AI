@@ -1,0 +1,90 @@
+{
+  "library": {
+    "layerDxfPath": "D:\\CAO VAN SIEU\\27. CHUONG TRINH AI - MEP\\THU VIEN\\LAYER.dxf",
+    "equipmentPath": "D:\\CAO VAN SIEU\\27. CHUONG TRINH AI - MEP\\THU VIEN\\HVAC\\Thiết bị",
+    "fittingPath": "D:\\CAO VAN SIEU\\27. CHUONG TRINH AI - MEP\\THU VIEN\\HVAC\\Phụ kiện"
+  },
+  "hvacCategories": [
+    {
+      "id": "duct",
+      "name": "Hệ thống ống gió",
+      "systems": [
+        { "id": "SA", "name": "Cấp gió lạnh", "layerDuct": "M-AC air duct supply", "layerFlex": "M-AC air duct supply flexible", "layerText": "M-AC air duct supply text", "colorIndex": 50, "colorHex": "#38bdf8" },
+        { "id": "RA", "name": "Hồi gió lạnh", "layerDuct": "M-AC air duct return", "layerFlex": "M-AC air duct return flexible", "layerText": "M-AC air duct return text", "colorIndex": 30, "colorHex": "#f87171" },
+        { "id": "OA", "name": "Gió tươi", "layerDuct": "M-AC air duct fresh", "layerFlex": "M-AC air duct fresh flexible", "layerText": "M-AC air duct fresh text", "colorIndex": 100, "colorHex": "#34d399" },
+        { "id": "EA", "name": "Gió thải", "layerDuct": "M-AC air duct exhaust", "layerFlex": "M-AC air duct exhaust flexible", "layerText": "M-AC air duct exhaust text", "colorIndex": 10, "colorHex": "#fbbf24" },
+        { "id": "TA-HK", "name": "Tăng áp - Hút khói PCCC", "layerDuct": "M-F air duct exhaust", "layerFlex": "M-F air duct exhaust flexible", "layerText": "M-F air duct exhaust text", "colorIndex": 160, "colorHex": "#f43f5e" }
+      ],
+      "sizes": {
+        "rectWidths": [100, 150, 200, 250, 300, 400, 500, 600, 800, 1000, 1200, 1500],
+        "rectHeights": [100, 150, 200, 250, 300, 400, 500, 600, 800],
+        "roundDiameters": [100, 125, 150, 200, 250, 300, 350, 400, 450, 500]
+      }
+    },
+    {
+      "id": "gas",
+      "name": "Hệ thống ống gas",
+      "systems": [
+        { "id": "GAS-SPLIT", "name": "Gas Máy Cục Bộ (Split)", "layerDuct": "M-AC ref pipe", "layerFlex": "M-AC ref pipe text", "layerText": "M-AC ref pipe text", "colorIndex": 220, "colorHex": "#c084fc" },
+        { "id": "GAS-VRV", "name": "Gas Hệ VRV / VRF", "layerDuct": "M-AC ref pipe", "layerFlex": "M-AC ref pipe text", "layerText": "M-AC ref pipe text", "colorIndex": 220, "colorHex": "#e879f9" }
+      ],
+      "gasSizes": [
+        { "liquid": "Ø6.35 mm (1/4\")", "gas": "Ø12.7 mm (1/2\")" },
+        { "liquid": "Ø9.52 mm (3/8\")", "gas": "Ø15.88 mm (5/8\")" },
+        { "liquid": "Ø9.52 mm (3/8\")", "gas": "Ø19.05 mm (3/4\")" },
+        { "liquid": "Ø12.7 mm (1/2\")", "gas": "Ø22.2 mm (7/8\")" },
+        { "liquid": "Ø15.88 mm (5/8\")", "gas": "Ø28.58 mm (1-1/8\")" }
+      ],
+      "fittings": ["BUN_BOCHIAGA.dxf"]
+    },
+    {
+      "id": "chiller",
+      "name": "Hệ thống Chiller",
+      "systems": [
+        { "id": "CHWS", "name": "Cấp nước lạnh Chiller", "layerDuct": "M-AC chiller water supply", "layerFlex": "M-AC chiller water supply flexible", "layerText": "M-AC chiller water supply text", "colorIndex": 60, "colorHex": "#60a5fa" },
+        { "id": "CHWR", "name": "Hồi nước lạnh Chiller", "layerDuct": "M-AC chiller water return", "layerFlex": "M-AC chiller water return flexible", "layerText": "M-AC chiller water return text", "colorIndex": 40, "colorHex": "#818cf8" },
+        { "id": "CWS", "name": "Cấp nước giải nhiệt (Cooling Tower)", "layerDuct": "M-AC condensing water supply", "layerFlex": "M-AC condensing water supply flexible", "layerText": "M-AC condensing water supply text", "colorIndex": 140, "colorHex": "#4ade80" },
+        { "id": "CWR", "name": "Hồi nước giải nhiệt (Cooling Tower)", "layerDuct": "M-AC condensing water return", "layerFlex": "M-AC condensing water return flexible", "layerText": "M-AC condensing water return text", "colorIndex": 120, "colorHex": "#22c55e" }
+      ],
+      "pipeSizes": ["DN50", "DN65", "DN80", "DN100", "DN125", "DN150", "DN200", "DN250", "DN300"]
+    },
+    {
+      "id": "water",
+      "name": "Hệ thống ống nước",
+      "systems": [
+        { "id": "DRAIN", "name": "Nước ngưng điều hòa (Độ dốc 1%)", "layerDuct": "M-AC drain pipe", "layerFlex": "M-AC drain pipe text", "layerText": "M-AC drain pipe text", "colorIndex": 160, "colorHex": "#2dd4bf" },
+        { "id": "MAKEUP-W", "name": "Nước cấp bù hệ thống", "layerDuct": "M-AC drain pipe", "layerFlex": "M-AC drain pipe text", "layerText": "M-AC drain pipe text", "colorIndex": 160, "colorHex": "#38bdf8" }
+      ],
+      "drainSizes": ["D21", "D27", "D34", "D42", "D49", "D60"]
+    },
+    {
+      "id": "signal",
+      "name": "Hệ thống dây tín hiệu",
+      "systems": [
+        { "id": "CTRL-WIRE", "name": "Dây điều khiển Thermostat", "layerDuct": "M-AC electric wire", "layerFlex": "M-AC electric text", "layerText": "M-AC electric text", "colorIndex": 100, "colorHex": "#eab308" },
+        { "id": "BMS-BUS", "name": "Mạng truyền thông BMS / RS485", "layerDuct": "M-AC electric wire", "layerFlex": "M-AC electric text", "layerText": "M-AC electric text", "colorIndex": 100, "colorHex": "#f97316" },
+        { "id": "CABLE-TRAY", "name": "Máng cáp tín hiệu", "layerDuct": "M-AC electric duct", "layerFlex": "M-AC electric text", "layerText": "M-AC electric text", "colorIndex": 180, "colorHex": "#a855f7" }
+      ],
+      "wireTypes": ["2×0.75 mm²", "2×1.5 mm²", "4×0.75 mm² (Shielded)", "RS485 Modbus"]
+    }
+  ],
+  "equipmentBlocks": [
+    { "name": "Miệng gió 4 hướng", "file": "BUN_Mieng gio khuyech tan 4 huong.dxf", "layer": "M-AC grille" },
+    { "name": "Miệng gió tròn", "file": "BUN_Mieng gio khuyech tan tron.dxf", "layer": "M-AC grille" },
+    { "name": "Miệng gió Louver", "file": "BUN_Mieng gio louver.dxf", "layer": "M-AC grille" },
+    { "name": "Miệng gió nan đơn", "file": "BUN_Mieng gio nan don.dxf", "layer": "M-AC grille" },
+    { "name": "Miệng gió sọt trứng", "file": "BUN_Mieng gio sot trung.dxf", "layer": "M-AC grille" }
+  ],
+  "fittingBlocks": [
+    { "name": "Bộ chia ga", "file": "BUN_BOCHIAGA.dxf" },
+    { "name": "Khớp nối mềm tròn", "file": "BUN_Khop noi mem tron.dxf" },
+    { "name": "Khớp nối mềm vuông", "file": "BUN_Khop noi mem vuong.dxf" },
+    { "name": "Van chặn lửa MFD", "file": "BUN_Van chan lua dieu khien bang motor MFD.dxf" },
+    { "name": "Van chặn lửa FD", "file": "BUN_Van chan lua FD.dxf" },
+    { "name": "Van gió 1 chiều RND", "file": "BUN_Van gio mot chieu RND.dxf" },
+    { "name": "Van MD tròn", "file": "BUN_Van gio tron dieu chinh gio bang motor MD.dxf" },
+    { "name": "Van VCD tròn", "file": "BUN_Van gio tron VCD.dxf" },
+    { "name": "Van MD vuông", "file": "BUN_Van gio vuong dieu chinh gio bang motor MD.dxf" },
+    { "name": "Van VCD vuông", "file": "BUN_Van gio vuong VCD.dxf" }
+  ]
+}

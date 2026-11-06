@@ -1,0 +1,7 @@
+# Visual Studio / .NET
+obj/
+*.user
+*.suo
+.vs/
+.idea/
+*.tmp
