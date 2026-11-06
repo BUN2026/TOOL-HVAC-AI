@@ -7,73 +7,65 @@
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
   <style>
     ::-webkit-scrollbar { width: 4px; height: 4px; }
-    ::-webkit-scrollbar-track { background: #020617; }
+    ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
 
     /* Theme 1: Obsidian (Default) */
     .theme-obsidian {
       --bg-palette: #0b0f19;
-      --bg-card: #0f172a;
+      --bg-bar: #0f172a;
       --border-color: #1e293b;
       --accent: #38bdf8;
-      --accent-grad: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);
-      --radius-main: 16px;
-      --radius-card: 10px;
+      --radius-bar: 8px;
     }
 
     /* Theme 2: Cyber HUD */
     .theme-cyber {
       --bg-palette: #050811;
-      --bg-card: #0c1222;
+      --bg-bar: #0c1222;
       --border-color: #1e3a5f;
       --accent: #f59e0b;
-      --accent-grad: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
-      --radius-main: 6px;
-      --radius-card: 4px;
+      --radius-bar: 4px;
     }
 
     /* Theme 3: Minimal Flat */
     .theme-minimal {
       --bg-palette: #111827;
-      --bg-card: #1f2937;
+      --bg-bar: #1f2937;
       --border-color: #374151;
       --accent: #10b981;
-      --accent-grad: linear-gradient(135deg, #059669 0%, #10b981 100%);
-      --radius-main: 8px;
-      --radius-card: 6px;
+      --radius-bar: 6px;
     }
 
     .palette-box {
       background-color: var(--bg-palette);
-      border-radius: var(--radius-main);
-      transition: all 0.3s ease;
+      transition: all 0.25s ease;
     }
 
-    .accordion-card {
-      background-color: var(--bg-card);
-      border-radius: var(--radius-card);
+    /* Thanh chức năng có bề rộng ôm theo text (w-fit) */
+    .func-bar-header {
+      background-color: var(--bg-bar);
       border: 1px solid var(--border-color);
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      overflow: hidden;
-    }
-
-    .accordion-card:hover {
-      border-color: #475569;
-    }
-
-    .accordion-card.is-expanded {
-      border-color: #38bdf8;
-      box-shadow: 0 4px 20px -2px rgba(2, 132, 199, 0.15);
-    }
-
-    .accordion-header {
+      border-radius: var(--radius-bar);
       cursor: pointer;
       user-select: none;
-      transition: background 0.2s ease;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      max-width: 100%;
     }
 
-    .accordion-header:hover {
-      background-color: rgba(255, 255, 255, 0.03);
+    .func-bar-header:hover {
+      border-color: #38bdf8;
+      background-color: rgba(56, 189, 248, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .is-expanded > .func-bar-header {
+      border-color: #38bdf8;
+      background: linear-gradient(135deg, rgba(2, 132, 199, 0.2) 0%, rgba(15, 23, 42, 0.8) 100%);
+      box-shadow: 0 0 12px rgba(2, 132, 199, 0.2);
     }
 
     .arrow-icon {
@@ -84,17 +76,23 @@
       transform: rotate(180deg);
     }
 
-    .accordion-body {
+    .func-bar-body {
       max-height: 0;
       opacity: 0;
       overflow: hidden;
-      transition: max-height 0.35s cubic-bezier(0, 1, 0, 1), opacity 0.25s ease;
+      transition: max-height 0.3s cubic-bezier(0, 1, 0, 1), opacity 0.2s ease;
+      background-color: var(--bg-bar);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-bar);
     }
 
-    .is-expanded .accordion-body {
+    .is-expanded > .func-bar-body {
       max-height: 1200px;
       opacity: 1;
-      transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in;
+      margin-top: 6px;
+      border-color: #334155;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      transition: max-height 0.35s ease-in-out, opacity 0.25s ease-in;
     }
 
     .cad-btn {
@@ -110,7 +108,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 p-2 select-none min-h-screen font-sans flex flex-col items-center justify-start">
 
-  <!-- THEME SELECTOR BAR (CHO PHÉP CHỌN VÀI KIỂU GIAO DIỆN) -->
+  <!-- THEME SELECTOR BAR (3 KIỂU GIAO DIỆN) -->
   <div class="max-w-md w-full mb-2 flex items-center justify-between bg-slate-900/90 border border-slate-800 p-2 rounded-xl text-xs backdrop-blur">
     <div class="flex items-center gap-1.5 font-bold text-slate-300">
       <span>🎨 Kiểu giao diện:</span>
@@ -128,523 +126,465 @@
     </div>
   </div>
 
-  <!-- MAIN PALETTE CONTAINER: TÊN PALETTE "BUN-HVAC-DESIGN" -->
-  <div id="paletteRoot" class="theme-obsidian palette-box max-w-md w-full border border-slate-800 shadow-2xl overflow-hidden flex flex-col">
+  <!-- MO PHONG KHUNG AUTOCAD TOOL PALETTE (CO GIÃN TỰ NHIÊN, DƯỚI ĐỂ TRỐNG) -->
+  <div class="max-w-md w-full rounded-2xl border border-slate-800 bg-[#070b13] p-1.5 shadow-2xl flex flex-col items-start min-h-[500px]">
     
-    <!-- 1. PALETTE HEADER: TÊN "BUN-HVAC-DESIGN" & CHỌN LAYER -->
-    <div class="p-3 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800 space-y-2">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <div id="hudSysIndicatorDot" class="w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)] animate-pulse"></div>
-          <div>
-            <h1 class="text-sm font-black tracking-wider text-cyan-300 font-mono">BUN-HVAC-DESIGN</h1>
-            <span class="text-[10px] text-slate-400 font-medium block">CAD PRO SUITE • ASHRAE 2001</span>
-          </div>
-        </div>
-        <div class="flex items-center gap-1">
-          <button onclick="toggleAllAccordions(true)" title="Mở tất cả thanh ngang" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[10px] font-mono text-slate-300">
-            Mở hết
-          </button>
-          <button onclick="toggleAllAccordions(false)" title="Thu gọn tất cả" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[10px] font-mono text-slate-300">
-            Thu gọn
-          </button>
-        </div>
-      </div>
-
-      <!-- Compact Layer Selector -->
-      <div class="flex items-center gap-1.5 bg-slate-950/80 p-1.5 rounded-lg border border-slate-800 text-xs">
-        <span class="text-slate-400 font-semibold pl-1 text-[11px]">🏷️ Layer:</span>
-        <select id="selLayerDropdown" onchange="onLayerDropdownChange(this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-0.5 text-xs text-cyan-300 font-mono font-semibold focus:outline-none focus:border-cyan-400">
-        </select>
-      </div>
-    </div>
-
-    <!-- 2. 5 PHÂN HỆ CHÍNH (NAVIGATION TABS) -->
-    <div class="bg-slate-950 p-1.5 border-b border-slate-800">
-      <div class="grid grid-cols-5 gap-1 text-[11px] text-center font-bold">
-        <button id="catBtn_duct" onclick="switchCategory('duct')" class="cad-btn py-1.5 rounded-lg border border-cyan-500/50 bg-cyan-600 text-white flex flex-col items-center">
-          <span>🌪️</span>
-          <span class="truncate w-full text-[10px]">Ống Gió</span>
-        </button>
-        <button id="catBtn_gas" onclick="switchCategory('gas')" class="cad-btn py-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-white flex flex-col items-center">
-          <span>❄️</span>
-          <span class="truncate w-full text-[10px]">Ống Gas</span>
-        </button>
-        <button id="catBtn_chiller" onclick="switchCategory('chiller')" class="cad-btn py-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-white flex flex-col items-center">
-          <span>🏢</span>
-          <span class="truncate w-full text-[10px]">Chiller</span>
-        </button>
-        <button id="catBtn_water" onclick="switchCategory('water')" class="cad-btn py-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-white flex flex-col items-center">
-          <span>💧</span>
-          <span class="truncate w-full text-[10px]">Nước</span>
-        </button>
-        <button id="catBtn_signal" onclick="switchCategory('signal')" class="cad-btn py-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-white flex flex-col items-center">
-          <span>⚡</span>
-          <span class="truncate w-full text-[10px]">Tín Hiệu</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- 3. CÁC PHÂN HỆ VỚI CÁC CHỨC NĂNG DẠNG THANH NGANG THU GỌN (ACCORDION) -->
-    <div class="p-2.5 space-y-2 max-h-[560px] overflow-y-auto">
+    <!-- MAIN PALETTE BOX: BUN-HVAC-DESIGN (KHÔNG ÉP CHIỀU DỌC, CO GIÃN THEO NỘI DUNG) -->
+    <div id="paletteRoot" class="theme-obsidian palette-box w-full rounded-xl border border-slate-800 shadow-lg flex flex-col items-start overflow-hidden">
       
-      <!-- ==================== HỆ 1: ỐNG GIÓ ==================== -->
-      <div id="ws_duct" class="space-y-2">
-        
-        <!-- THANH NGANG 1.1: TÍNH CHỌN TUYẾN ỐNG THẲNG ASHRAE 2001 -->
-        <div id="card_duct_calc" class="accordion-card is-expanded">
-          <div class="accordion-header p-2.5 flex items-center justify-between" onclick="toggleAccordion('card_duct_calc')">
-            <div class="flex items-center gap-2 overflow-hidden">
-              <span class="text-sm">⚡</span>
-              <span class="font-bold text-slate-200 text-xs uppercase tracking-wide">1. Ống Thẳng ASHRAE</span>
-              <span id="badgeDuctSummary" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-950 text-cyan-300 border border-cyan-800/60 truncate">
-                400×250 • V=4.4m/s • 0.8Pa/m
-              </span>
-            </div>
-            <span class="arrow-icon text-slate-400 text-xs ml-1">▼</span>
+      <!-- 1. HEADER PALETTE: TÊN "BUN-HVAC-DESIGN" & LAYER -->
+      <div class="w-full p-2.5 bg-gradient-to-b from-slate-950 to-slate-900 border-b border-slate-800 space-y-1.5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div id="hudSysIndicatorDot" class="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)] animate-pulse"></div>
+            <h1 class="text-xs font-black tracking-wider text-cyan-300 font-mono">BUN-HVAC-DESIGN</h1>
           </div>
+          <div class="flex items-center gap-1">
+            <button onclick="toggleAllBars(true)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[10px] font-mono text-slate-300">
+              Mở hết
+            </button>
+            <button onclick="toggleAllBars(false)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[10px] font-mono text-slate-300">
+              Thu gọn
+            </button>
+          </div>
+        </div>
 
-          <div class="accordion-body px-2.5 pb-2.5 space-y-2.5 text-xs border-t border-slate-800/80 pt-2">
-            <!-- Lưu lượng Q & Đơn vị -->
-            <div class="grid grid-cols-12 gap-1.5 items-center">
-              <div class="col-span-5">
-                <label class="text-slate-400 block mb-0.5 text-[11px]">Lưu lượng (Q):</label>
-                <div class="flex items-center bg-slate-950 border border-slate-700 rounded overflow-hidden">
-                  <input type="number" id="inDuctFlow" value="1200" oninput="runDuctCalculation()" class="w-full bg-transparent px-2 py-1 text-slate-100 font-mono font-bold text-xs focus:outline-none" />
-                  <button onclick="toggleFlowUnit()" id="btnFlowUnit" class="px-2 py-1 bg-cyan-700/40 text-cyan-300 font-mono font-bold text-[10px] border-l border-slate-700">
-                    m³/h
-                  </button>
-                </div>
-              </div>
-              <div class="col-span-7">
-                <div class="flex justify-between items-center mb-0.5">
-                  <label class="text-slate-400 text-[11px]">Khống chế:</label>
-                  <div class="flex gap-1 text-[10px]">
-                    <button id="btnMethodFriction" onclick="setCalcMethod('friction')" class="px-1.5 py-0.5 rounded bg-cyan-500 text-slate-950 font-bold">Ma sát</button>
-                    <button id="btnMethodVelocity" onclick="setCalcMethod('velocity')" class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 hover:text-white">Vận tốc</button>
+        <!-- Layer Selector (Ôm khít nội dung) -->
+        <div class="flex items-center gap-1.5 bg-slate-950/80 px-2 py-1 rounded border border-slate-800 text-[11px] w-full">
+          <span class="text-slate-400 font-semibold whitespace-nowrap">🏷️ Layer:</span>
+          <select id="selLayerDropdown" onchange="onLayerDropdownChange(this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-[11px] text-cyan-300 font-mono font-semibold focus:outline-none">
+          </select>
+        </div>
+      </div>
+
+      <!-- 2. HÀNG NÚT PHÂN HỆ: BỀ RỘNG ÔM VỪA TEXT (FLEX WRAP / FIT-CONTENT) -->
+      <div class="w-full bg-slate-950 px-2.5 py-1.5 border-b border-slate-800 flex flex-wrap gap-1 items-center justify-start">
+        <button id="catBtn_duct" onclick="switchCategory('duct')" class="cad-btn px-2.5 py-1 rounded-md border border-cyan-500/50 bg-cyan-600 text-white font-bold text-[11px] flex items-center gap-1">
+          <span>🌪️</span>
+          <span>Ống Gió</span>
+        </button>
+        <button id="catBtn_gas" onclick="switchCategory('gas')" class="cad-btn px-2.5 py-1 rounded-md border border-slate-800 bg-slate-900 text-slate-400 hover:text-white font-medium text-[11px] flex items-center gap-1">
+          <span>❄️</span>
+          <span>Gas</span>
+        </button>
+        <button id="catBtn_chiller" onclick="switchCategory('chiller')" class="cad-btn px-2.5 py-1 rounded-md border border-slate-800 bg-slate-900 text-slate-400 hover:text-white font-medium text-[11px] flex items-center gap-1">
+          <span>🏢</span>
+          <span>Chiller</span>
+        </button>
+        <button id="catBtn_water" onclick="switchCategory('water')" class="cad-btn px-2.5 py-1 rounded-md border border-slate-800 bg-slate-900 text-slate-400 hover:text-white font-medium text-[11px] flex items-center gap-1">
+          <span>💧</span>
+          <span>Nước</span>
+        </button>
+        <button id="catBtn_signal" onclick="switchCategory('signal')" class="cad-btn px-2.5 py-1 rounded-md border border-slate-800 bg-slate-900 text-slate-400 hover:text-white font-medium text-[11px] flex items-center gap-1">
+          <span>⚡</span>
+          <span>Tín Hiệu</span>
+        </button>
+      </div>
+
+      <!-- 3. CÁC THANH CHỨC NĂNG: BỀ RỘNG ÔM KHÍT TEXT (W-FIT) & KHÔNG ÉP KÍN CHIỀU DỌC -->
+      <div class="w-full p-2.5 space-y-2 flex flex-col items-start">
+        
+        <!-- ==================== HỆ 1: ỐNG GIÓ ==================== -->
+        <div id="ws_duct" class="w-full space-y-2 flex flex-col items-start">
+          
+          <!-- THANH 1.1: ỐNG THẲNG ASHRAE (BỀ RỘNG ÔM THEO TEXT) -->
+          <div id="bar_duct_calc" class="w-full flex flex-col items-start is-expanded">
+            <!-- Header bar ôm khít text (w-fit) -->
+            <div class="func-bar-header px-2.5 py-1.5 gap-2" onclick="toggleBar('bar_duct_calc')">
+              <span class="text-xs">⚡</span>
+              <span class="font-bold text-slate-200 text-xs whitespace-nowrap">Ống Thẳng ASHRAE</span>
+              <span id="badgeDuctSummary" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-950 text-cyan-300 border border-cyan-800/60 whitespace-nowrap">
+                400×250 • 0.83Pa/m
+              </span>
+              <span class="arrow-icon text-slate-400 text-[10px] ml-0.5">▼</span>
+            </div>
+
+            <!-- Body chi tiết khi xổ xuống -->
+            <div class="func-bar-body w-full p-2.5 space-y-2 text-xs">
+              <div class="grid grid-cols-12 gap-1.5 items-center">
+                <div class="col-span-5">
+                  <label class="text-slate-400 block mb-0.5 text-[10px]">Lưu lượng (Q):</label>
+                  <div class="flex items-center bg-slate-950 border border-slate-700 rounded overflow-hidden">
+                    <input type="number" id="inDuctFlow" value="1200" oninput="runDuctCalculation()" class="w-full bg-transparent px-2 py-1 text-slate-100 font-mono font-bold text-xs focus:outline-none" />
+                    <button onclick="toggleFlowUnit()" id="btnFlowUnit" class="px-1.5 py-1 bg-cyan-700/40 text-cyan-300 font-mono font-bold text-[10px] border-l border-slate-700">
+                      m³/h
+                    </button>
                   </div>
                 </div>
-                <div id="boxFrictionInput">
-                  <select id="selFrictionValue" onchange="runDuctCalculation()" class="w-full bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-slate-200 font-mono text-xs">
-                    <option value="0.65">0.65 Pa/m (Êm dịu)</option>
-                    <option value="0.80" selected>0.80 Pa/m (Chuẩn VP)</option>
-                    <option value="1.00">1.00 Pa/m (Kinh tế)</option>
-                    <option value="1.20">1.20 Pa/m (Trục đứng)</option>
-                  </select>
-                </div>
-                <div id="boxVelocityInput" class="hidden">
-                  <select id="selVelocityValue" onchange="runDuctCalculation()" class="w-full bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-slate-200 font-mono text-xs">
-                    <option value="4.0">4.0 m/s (Nhánh)</option>
-                    <option value="5.5">5.5 m/s (Nhánh chính)</option>
-                    <option value="7.0" selected>7.0 m/s (Trục chính)</option>
-                    <option value="8.5">8.5 m/s (Trục đứng)</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <!-- Tự do chỉnh W x H -->
-            <div id="boxResultContainer" class="bg-slate-950 p-2 rounded-lg border border-slate-800 space-y-1.5">
-              <div class="flex justify-between items-center text-[11px]">
-                <span class="font-bold text-slate-300">KÍCH THƯỚC ĐỀ XUẤT (W × H):</span>
-                <span id="badgeAspectRatio" class="px-1.5 py-0.2 rounded font-mono font-bold text-[10px] bg-emerald-500/20 text-emerald-400">
-                  W/H: 1.6:1
-                </span>
-              </div>
-              <div class="grid grid-cols-2 gap-2">
-                <div class="flex items-center gap-1">
-                  <span class="text-slate-400 text-[11px]">W:</span>
-                  <select id="p1Width" onchange="onManualSizeChange()" class="w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-cyan-300 font-mono font-bold">
-                    <option value="150">150</option><option value="200">200</option><option value="250">250</option><option value="300">300</option>
-                    <option value="350">350</option><option value="400" selected>400</option><option value="450">450</option><option value="500">500</option>
-                    <option value="600">600</option><option value="700">700</option><option value="800">800</option><option value="1000">1000</option><option value="1200">1200</option>
-                  </select>
-                </div>
-                <div class="flex items-center gap-1">
-                  <span class="text-slate-400 text-[11px]">H:</span>
-                  <select id="p1Height" onchange="onManualSizeChange()" class="w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-cyan-300 font-mono font-bold">
-                    <option value="150">150</option><option value="200">200</option><option value="250" selected>250</option>
-                    <option value="300">300</option><option value="350">350</option><option value="400">400</option>
-                    <option value="500">500</option><option value="600">600</option><option value="800">800</option>
-                  </select>
+                <div class="col-span-7">
+                  <div class="flex justify-between items-center mb-0.5 text-[10px]">
+                    <span class="text-slate-400">Khống chế:</span>
+                    <div class="flex gap-1 text-[9px]">
+                      <button id="btnMethodFriction" onclick="setCalcMethod('friction')" class="px-1.5 py-0.5 rounded bg-cyan-500 text-slate-950 font-bold">Ma sát</button>
+                      <button id="btnMethodVelocity" onclick="setCalcMethod('velocity')" class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 hover:text-white">Vận tốc</button>
+                    </div>
+                  </div>
+                  <div id="boxFrictionInput">
+                    <select id="selFrictionValue" onchange="runDuctCalculation()" class="w-full bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-slate-200 font-mono text-xs">
+                      <option value="0.65">0.65 Pa/m (Êm dịu)</option>
+                      <option value="0.80" selected>0.80 Pa/m (Chuẩn VP)</option>
+                      <option value="1.00">1.00 Pa/m (Kinh tế)</option>
+                      <option value="1.20">1.20 Pa/m (Trục đứng)</option>
+                    </select>
+                  </div>
+                  <div id="boxVelocityInput" class="hidden">
+                    <select id="selVelocityValue" onchange="runDuctCalculation()" class="w-full bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-slate-200 font-mono text-xs">
+                      <option value="4.0">4.0 m/s (Nhánh)</option>
+                      <option value="5.5">5.5 m/s (Nhánh chính)</option>
+                      <option value="7.0" selected>7.0 m/s (Trục chính)</option>
+                      <option value="8.5">8.5 m/s (Trục đứng)</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              <!-- Thủy lực (Tô đỏ cảnh báo nếu vượt chuẩn) -->
-              <div class="grid grid-cols-4 gap-1 text-center font-mono text-[10px] pt-0.5">
-                <div class="bg-slate-900/80 p-1 rounded">
-                  <span class="text-slate-500 block text-[9px]">Vận tốc V</span>
-                  <span id="resVelocity" class="text-emerald-400 font-bold">4.44 m/s</span>
+              <!-- Tùy chỉnh W x H -->
+              <div id="boxResultContainer" class="bg-slate-950 p-2 rounded border border-slate-800 space-y-1.5">
+                <div class="flex justify-between items-center text-[10px]">
+                  <span class="font-bold text-slate-300">KÍCH THƯỚC (W × H):</span>
+                  <span id="badgeAspectRatio" class="px-1.5 py-0.2 rounded font-mono font-bold text-[9px] bg-emerald-500/20 text-emerald-400">
+                    W/H: 1.6:1
+                  </span>
                 </div>
-                <div class="bg-slate-900/80 p-1 rounded">
-                  <span class="text-slate-500 block text-[9px]">Áp suất Pv</span>
-                  <span id="resPv" class="text-sky-300 font-bold">11.88 Pa</span>
+                <div class="grid grid-cols-2 gap-2">
+                  <div class="flex items-center gap-1">
+                    <span class="text-slate-400 text-[10px]">W:</span>
+                    <select id="p1Width" onchange="onManualSizeChange()" class="w-full bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-cyan-300 font-mono font-bold text-xs">
+                      <option value="150">150</option><option value="200">200</option><option value="250">250</option><option value="300">300</option>
+                      <option value="350">350</option><option value="400" selected>400</option><option value="450">450</option><option value="500">500</option>
+                      <option value="600">600</option><option value="700">700</option><option value="800">800</option><option value="1000">1000</option>
+                    </select>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <span class="text-slate-400 text-[10px]">H:</span>
+                    <select id="p1Height" onchange="onManualSizeChange()" class="w-full bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-cyan-300 font-mono font-bold text-xs">
+                      <option value="150">150</option><option value="200">200</option><option value="250" selected>250</option>
+                      <option value="300">300</option><option value="350">350</option><option value="400">400</option>
+                      <option value="500">500</option><option value="600">600</option>
+                    </select>
+                  </div>
                 </div>
-                <div class="bg-slate-900/80 p-1 rounded">
-                  <span class="text-slate-500 block text-[9px]">Đ.kính Dh</span>
-                  <span id="resDh" class="text-cyan-300 font-bold">Ø308 mm</span>
+
+                <div class="grid grid-cols-4 gap-1 text-center font-mono text-[9px] pt-0.5">
+                  <div class="bg-slate-900/80 p-1 rounded">
+                    <span class="text-slate-500 block text-[8px]">V</span>
+                    <span id="resVelocity" class="text-emerald-400 font-bold">4.44m/s</span>
+                  </div>
+                  <div class="bg-slate-900/80 p-1 rounded">
+                    <span class="text-slate-500 block text-[8px]">Pv</span>
+                    <span id="resPv" class="text-sky-300 font-bold">11.8Pa</span>
+                  </div>
+                  <div class="bg-slate-900/80 p-1 rounded">
+                    <span class="text-slate-500 block text-[8px]">Dh</span>
+                    <span id="resDh" class="text-cyan-300 font-bold">Ø308</span>
+                  </div>
+                  <div class="bg-slate-900/80 p-1 rounded">
+                    <span class="text-slate-500 block text-[8px]">ΔPf</span>
+                    <span id="resFrictionDrop" class="text-emerald-400 font-bold">0.83P/m</span>
+                  </div>
                 </div>
-                <div class="bg-slate-900/80 p-1 rounded">
-                  <span class="text-slate-500 block text-[9px]">ΔPf/m</span>
-                  <span id="resFrictionDrop" class="text-emerald-400 font-bold">0.83 Pa/m</span>
+
+                <div id="boxWarningText" class="hidden p-1 rounded bg-red-950/40 border border-red-500/40 text-red-400 text-[9px] font-semibold text-center">
+                  ⚠️ V hoặc ΔPf vượt chuẩn
                 </div>
               </div>
 
-              <!-- Dòng cảnh báo tô đỏ -->
-              <div id="boxWarningText" class="hidden p-1.5 rounded bg-red-950/40 border border-red-500/40 text-red-400 text-[10px] font-semibold flex items-center gap-1">
-                <span>⚠️</span>
-                <span id="txtWarningMsg">CẢNH BÁO: Thông số vượt chuẩn</span>
+              <div class="flex items-center gap-1.5 text-[10px] text-slate-300">
+                <input type="checkbox" id="chkIsMainDuct" checked onchange="saveState()" class="accent-cyan-400 w-3 h-3 rounded" />
+                <span>Tuyến chính (SA 600x400)</span>
               </div>
-            </div>
 
-            <!-- Tùy chọn Text: Ống chính / Nhánh -->
-            <div class="flex items-center justify-between text-[11px] text-slate-300">
-              <label class="flex items-center gap-1.5 cursor-pointer">
-                <input type="checkbox" id="chkIsMainDuct" checked onchange="saveState()" class="accent-cyan-400 w-3.5 h-3.5 rounded" />
-                <span>Tuyến chính (Tiền tố "SA 600x400")</span>
-              </label>
-            </div>
-
-            <!-- Nút vẽ liên tục & ống mềm -->
-            <div class="grid grid-cols-3 gap-1.5 pt-0.5">
-              <button onclick="triggerDrawing('HVAC_DRAW_RECT_DUCT', 'Vẽ tuyến liên tục & Tự chèn Fitting')" class="cad-btn col-span-2 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded text-xs flex items-center justify-center gap-1 shadow">
-                <span>✏️ Vẽ Tuyến Liên Tục</span>
-              </button>
-              <button onclick="triggerDrawing('HVAC_DRAW_FLEX_DUCT', 'Vẽ ống mềm')" class="cad-btn py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium rounded text-xs border border-slate-700">
-                <span>Ống mềm</span>
-              </button>
+              <div class="grid grid-cols-3 gap-1 pt-0.5">
+                <button onclick="triggerDrawing('HVAC_DRAW_RECT_DUCT', 'Vẽ tuyến liên tục & Tự chèn Fitting')" class="cad-btn col-span-2 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded text-[11px] flex items-center justify-center gap-1">
+                  <span>✏️ Vẽ Tuyến Liên Tục</span>
+                </button>
+                <button onclick="triggerDrawing('HVAC_DRAW_FLEX_DUCT', 'Vẽ ống mềm')" class="cad-btn py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium rounded text-[11px] border border-slate-700">
+                  <span>Ống mềm</span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- THANH NGANG 1.2: TÍNH CHỌN MIỆNG GIÓ & GÁN LƯU LƯỢNG -->
-        <div id="card_term_calc" class="accordion-card">
-          <div class="accordion-header p-2.5 flex items-center justify-between" onclick="toggleAccordion('card_term_calc')">
-            <div class="flex items-center gap-2 overflow-hidden">
-              <span class="text-sm">🌀</span>
-              <span class="font-bold text-slate-200 text-xs uppercase tracking-wide">2. Tính Chọn Miệng Gió</span>
-              <span id="badgeTermSummary" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-950 text-indigo-300 border border-indigo-800/60 truncate">
-                Ø200 • 600×600 • Q=300m³/h
+          <!-- THANH 1.2: TÍNH CHỌN MIỆNG GIÓ (BỀ RỘNG ÔM THEO TEXT) -->
+          <div id="bar_term_calc" class="w-full flex flex-col items-start">
+            <div class="func-bar-header px-2.5 py-1.5 gap-2" onclick="toggleBar('bar_term_calc')">
+              <span class="text-xs">🌀</span>
+              <span class="font-bold text-slate-200 text-xs whitespace-nowrap">Tính Chọn Miệng Gió</span>
+              <span id="badgeTermSummary" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-950 text-indigo-300 border border-indigo-800/60 whitespace-nowrap">
+                Ø200 • Q=300m³/h
               </span>
+              <span class="arrow-icon text-slate-400 text-[10px] ml-0.5">▼</span>
             </div>
-            <span class="arrow-icon text-slate-400 text-xs ml-1">▼</span>
-          </div>
 
-          <div class="accordion-body px-2.5 pb-2.5 space-y-2 text-xs border-t border-slate-800/80 pt-2">
-            <!-- Lưu lượng Q miệng gió -->
-            <div class="grid grid-cols-12 gap-1.5 items-center">
-              <div class="col-span-6">
-                <div class="flex justify-between items-center mb-0.5 text-[10px]">
-                  <span class="text-slate-400">Lưu lượng (Q):</span>
-                  <button onclick="copyDuctFlowToTerminal()" class="text-cyan-400 hover:underline">= Q_ống/4</button>
+            <div class="func-bar-body w-full p-2.5 space-y-2 text-xs">
+              <div class="grid grid-cols-12 gap-1.5 items-center">
+                <div class="col-span-6">
+                  <div class="flex justify-between items-center mb-0.5 text-[10px]">
+                    <span class="text-slate-400">Lưu lượng (Q):</span>
+                    <button onclick="copyDuctFlowToTerminal()" class="text-cyan-400 hover:underline">= Q_ống/4</button>
+                  </div>
+                  <div class="flex items-center bg-slate-950 border border-slate-700 rounded overflow-hidden">
+                    <input type="number" id="inTerminalFlow" value="300" oninput="runTerminalCalculation()" class="w-full bg-transparent px-1.5 py-1 text-slate-100 font-mono font-bold text-xs focus:outline-none" />
+                    <button onclick="toggleTerminalFlowUnit()" id="btnTerminalFlowUnit" class="px-1.5 py-1 bg-indigo-700/40 text-indigo-300 font-mono font-bold text-[10px] border-l border-slate-700">
+                      m³/h
+                    </button>
+                  </div>
                 </div>
-                <div class="flex items-center bg-slate-950 border border-slate-700 rounded overflow-hidden">
-                  <input type="number" id="inTerminalFlow" value="300" oninput="runTerminalCalculation()" class="w-full bg-transparent px-2 py-1 text-slate-100 font-mono font-bold text-xs focus:outline-none" />
-                  <button onclick="toggleTerminalFlowUnit()" id="btnTerminalFlowUnit" class="px-2 py-1 bg-indigo-700/40 text-indigo-300 font-mono font-bold text-[10px] border-l border-slate-700">
-                    m³/h
-                  </button>
+                <div class="col-span-6">
+                  <span class="text-slate-400 block mb-0.5 text-[10px]">V_neck mục tiêu:</span>
+                  <select id="selTargetVneck" onchange="runTerminalCalculation()" class="w-full bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-slate-200 font-mono text-xs">
+                    <option value="2.0">2.0 m/s (Êm)</option>
+                    <option value="2.5" selected>2.5 m/s (VP)</option>
+                    <option value="3.0">3.0 m/s (TM)</option>
+                  </select>
                 </div>
               </div>
-              <div class="col-span-6">
-                <label class="text-slate-400 block mb-0.5 text-[10px]">Vận tốc cổ mục tiêu:</label>
-                <select id="selTargetVneck" onchange="runTerminalCalculation()" class="w-full bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-slate-200 font-mono text-xs">
-                  <option value="2.0">2.0 m/s (Êm / NC 20)</option>
-                  <option value="2.5" selected>2.5 m/s (Chuẩn VP)</option>
-                  <option value="3.0">3.0 m/s (Thương mại)</option>
+
+              <div>
+                <span class="text-slate-400 block mb-0.5 text-[10px]">Loại miệng gió (DXF):</span>
+                <select id="selTerminalBlock" onchange="onTerminalTypeChanged()" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-indigo-300 font-mono font-semibold text-xs">
+                  <option value="BUN_Mieng gio khuyech tan 4 huong.dxf" selected>Khuếch tán 4 hướng</option>
+                  <option value="BUN_Mieng gio khuyech tan tron.dxf">Khuếch tán tròn</option>
+                  <option value="BUN_Mieng gio nan don.dxf">Miệng gió nan đơn</option>
+                  <option value="BUN_Mieng gio sot trung.dxf">Hồi sọt trứng</option>
+                  <option value="BUN_Mieng gio louver.dxf">Louver ngoài trời</option>
                 </select>
               </div>
-            </div>
 
-            <!-- Block DXF Selection -->
-            <div>
-              <label class="text-slate-400 block mb-0.5 text-[10px]">Loại miệng gió (Thư viện DXF):</label>
-              <select id="selTerminalBlock" onchange="onTerminalTypeChanged()" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-indigo-300 font-mono font-semibold text-xs">
-                <option value="BUN_Mieng gio khuyech tan 4 huong.dxf" selected>Khuếch tán 4 hướng</option>
-                <option value="BUN_Mieng gio khuyech tan tron.dxf">Khuếch tán tròn</option>
-                <option value="BUN_Mieng gio nan don.dxf">Miệng gió nan đơn</option>
-                <option value="BUN_Mieng gio sot trung.dxf">Hồi sọt trứng</option>
-                <option value="BUN_Mieng gio louver.dxf">Louver ngoài trời</option>
-              </select>
-            </div>
-
-            <!-- Kết quả tính & Tùy chỉnh tự do -->
-            <div id="boxTerminalResultBox" class="bg-slate-950 p-2 rounded-lg border border-slate-800 space-y-1.5">
-              <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <span class="text-slate-400 text-[10px] block">Mặt ngoài:</span>
-                  <select id="selTerminalFaceSize" onchange="onManualTerminalChange()" class="w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-indigo-300 font-mono text-xs">
+              <div id="boxTerminalResultBox" class="bg-slate-950 p-2 rounded border border-slate-800 space-y-1.5">
+                <div class="grid grid-cols-2 gap-1.5">
+                  <select id="selTerminalFaceSize" onchange="onManualTerminalChange()" class="w-full bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-indigo-300 font-mono text-xs">
                     <option value="600x600" selected>600 × 600</option>
                     <option value="450x450">450 × 450</option>
                     <option value="300x300">300 × 300</option>
-                    <option value="1200x150">1200 × 150</option>
+                  </select>
+                  <select id="selTerminalNeckDia" onchange="onManualTerminalChange()" class="w-full bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-cyan-300 font-mono font-bold text-xs">
+                    <option value="150">Ø150</option>
+                    <option value="200" selected>Ø200</option>
+                    <option value="250">Ø250</option>
+                    <option value="300">Ø300</option>
                   </select>
                 </div>
-                <div>
-                  <span class="text-slate-400 text-[10px] block">Cổ (Neck):</span>
-                  <select id="selTerminalNeckDia" onchange="onManualTerminalChange()" class="w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-cyan-300 font-mono font-bold text-xs">
-                    <option value="150">Ø150 mm</option>
-                    <option value="200" selected>Ø200 mm</option>
-                    <option value="250">Ø250 mm</option>
-                    <option value="300">Ø300 mm</option>
-                    <option value="350">Ø350 mm</option>
-                  </select>
+
+                <div class="grid grid-cols-3 gap-1 text-center font-mono text-[9px]">
+                  <div class="bg-slate-900/80 p-0.5 rounded">
+                    <span class="text-slate-500 block text-[8px]">Vneck</span>
+                    <span id="resTerminalVneck" class="text-emerald-400 font-bold">2.65m/s</span>
+                  </div>
+                  <div class="bg-slate-900/80 p-0.5 rounded">
+                    <span class="text-slate-500 block text-[8px]">ΔP</span>
+                    <span id="resTerminalDp" class="text-sky-300 font-bold">14Pa</span>
+                  </div>
+                  <div class="bg-slate-900/80 p-0.5 rounded">
+                    <span class="text-slate-500 block text-[8px]">Độ ồn</span>
+                    <span id="resTerminalNC" class="text-indigo-300 font-bold">NC 24</span>
+                  </div>
+                </div>
+
+                <div id="boxTerminalWarning" class="hidden p-0.5 rounded bg-red-950/40 border border-red-500/40 text-red-400 text-[8px] font-semibold text-center">
+                  ⚠️ Vneck > 3.5 m/s gây ồn gió
                 </div>
               </div>
 
-              <!-- Thủy lực miệng gió -->
-              <div class="grid grid-cols-3 gap-1 text-center font-mono text-[10px]">
-                <div class="bg-slate-900/80 p-1 rounded">
-                  <span class="text-slate-500 block text-[9px]">V_neck</span>
-                  <span id="resTerminalVneck" class="text-emerald-400 font-bold">2.65 m/s</span>
-                </div>
-                <div class="bg-slate-900/80 p-1 rounded">
-                  <span class="text-slate-500 block text-[9px]">Tổn thất ΔP</span>
-                  <span id="resTerminalDp" class="text-sky-300 font-bold">14.2 Pa</span>
-                </div>
-                <div class="bg-slate-900/80 p-1 rounded">
-                  <span class="text-slate-500 block text-[9px]">Độ ồn NC</span>
-                  <span id="resTerminalNC" class="text-indigo-300 font-bold">NC 24</span>
-                </div>
+              <div class="space-y-0.5 text-[10px] text-slate-300">
+                <label class="flex items-center gap-1.5 cursor-pointer">
+                  <input type="checkbox" id="chkAssignXData" checked onchange="saveState()" class="accent-indigo-400 w-3 h-3 rounded" />
+                  <span>Gán XData lưu lượng (Q, Neck)</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer">
+                  <input type="checkbox" id="chkAttachText" checked onchange="saveState()" class="accent-cyan-400 w-3 h-3 rounded" />
+                  <span>Ghi nhãn Q bên cạnh miệng gió</span>
+                </label>
               </div>
 
-              <div id="boxTerminalWarning" class="hidden p-1 rounded bg-red-950/40 border border-red-500/40 text-red-400 text-[9px] font-semibold text-center">
-                ⚠️ Vneck > 3.5 m/s gây ồn gió, nên tăng cỡ cổ
+              <div class="grid grid-cols-2 gap-1.5 pt-0.5">
+                <button onclick="insertAirTerminalAction()" class="cad-btn py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded text-[11px]">
+                  <span>🎯 Chèn Miệng Gió</span>
+                </button>
+                <button onclick="triggerDrawing('HVAC_AUTO_CONNECT_TERMINAL', 'Auto nối tuyến từ ống chính vào miệng gió')" class="cad-btn py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded text-[11px]">
+                  <span>⚡ Auto Nối Tuyến</span>
+                </button>
               </div>
-            </div>
-
-            <!-- Tùy chọn gán XData & Text -->
-            <div class="space-y-1 text-[11px] text-slate-300">
-              <label class="flex items-center gap-1.5 cursor-pointer">
-                <input type="checkbox" id="chkAssignXData" checked onchange="saveState()" class="accent-indigo-400 w-3.5 h-3.5 rounded" />
-                <span>Gán XData lưu lượng (Q, Neck) để Auto-Connect</span>
-              </label>
-              <label class="flex items-center gap-1.5 cursor-pointer">
-                <input type="checkbox" id="chkAttachText" checked onchange="saveState()" class="accent-cyan-400 w-3.5 h-3.5 rounded" />
-                <span>Ghi Text nhãn Q bên cạnh miệng gió</span>
-              </label>
-            </div>
-
-            <!-- Action buttons -->
-            <div class="grid grid-cols-2 gap-1.5 pt-0.5">
-              <button onclick="insertAirTerminalAction()" class="cad-btn py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded text-xs">
-                <span>🎯 Chèn Miệng Gió</span>
-              </button>
-              <button onclick="triggerDrawing('HVAC_AUTO_CONNECT_TERMINAL', 'Auto nối tuyến từ ống chính vào miệng gió')" class="cad-btn py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded text-xs">
-                <span>⚡ Auto Nối Tuyến</span>
-              </button>
             </div>
           </div>
+
+          <!-- THANH 1.3: TỔN THẤT PHỤ KIỆN (BỀ RỘNG ÔM THEO TEXT) -->
+          <div id="bar_fitting_calc" class="w-full flex flex-col items-start">
+            <div class="func-bar-header px-2.5 py-1.5 gap-2" onclick="toggleBar('bar_fitting_calc')">
+              <span class="text-xs">🛡️</span>
+              <span class="font-bold text-slate-200 text-xs whitespace-nowrap">Tổn Thất Phụ Kiện (CT 30)</span>
+              <span id="badgeFittingSummary" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-800/60 whitespace-nowrap">
+                Co 90° • ΔPj=2.6Pa
+              </span>
+              <span class="arrow-icon text-slate-400 text-[10px] ml-0.5">▼</span>
+            </div>
+
+            <div class="func-bar-body w-full p-2.5 space-y-1.5 text-xs">
+              <select id="selFittingType" onchange="calculateFittingLoss()" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs">
+                <option value="0.22" data-name="Co cong 90°">Co cong 90° (Co = 0.22)</option>
+                <option value="0.38" data-name="Co cong 90°">Co cong 90° (Co = 0.38)</option>
+                <option value="0.18" data-name="Co vuông Vanes">Co vuông có Vanes (Co = 0.18)</option>
+                <option value="0.95" data-name="Tê rẽ nhánh">Tê rẽ nhánh 90° (Co = 0.95)</option>
+                <option value="0.08" data-name="Côn thu">Côn thu chuyển tiếp (Co = 0.08)</option>
+                <option value="0.30" data-name="Van FD">Van chặn lửa FD (Co = 0.30)</option>
+              </select>
+
+              <div class="bg-slate-950 p-1.5 rounded border border-amber-500/30 flex justify-between items-center font-mono text-[11px]">
+                <span class="text-slate-400">Tổn thất:</span>
+                <span id="resFittingLoss" class="text-amber-300 font-bold">ΔPj = 2.61 Pa</span>
+              </div>
+            </div>
+          </div>
+
         </div>
 
-        <!-- THANH NGANG 1.3: TÍNH TỔN THẤT PHỤ KIỆN (CT 30) -->
-        <div id="card_fitting_calc" class="accordion-card">
-          <div class="accordion-header p-2.5 flex items-center justify-between" onclick="toggleAccordion('card_fitting_calc')">
-            <div class="flex items-center gap-2 overflow-hidden">
-              <span class="text-sm">🛡️</span>
-              <span class="font-bold text-slate-200 text-xs uppercase tracking-wide">3. Tổn Thất Phụ Kiện</span>
-              <span id="badgeFittingSummary" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-800/60 truncate">
-                Co 90° • Co=0.22 • ΔPj=2.6Pa
+        <!-- ==================== HỆ 2: ỐNG GAS ==================== -->
+        <div id="ws_gas" class="hidden w-full space-y-2 flex flex-col items-start">
+          <div id="bar_gas_calc" class="w-full flex flex-col items-start is-expanded">
+            <div class="func-bar-header px-2.5 py-1.5 gap-2" onclick="toggleBar('bar_gas_calc')">
+              <span class="text-xs">❄️</span>
+              <span class="font-bold text-slate-200 text-xs whitespace-nowrap">Tuyến Ống Gas VRV / Split</span>
+              <span id="badgeGasSummary" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-fuchsia-950 text-fuchsia-300 border border-fuchsia-800/60 whitespace-nowrap">
+                Ø9.52/15.88 • 3.0 HP
               </span>
+              <span class="arrow-icon text-slate-400 text-[10px] ml-0.5">▼</span>
             </div>
-            <span class="arrow-icon text-slate-400 text-xs ml-1">▼</span>
-          </div>
 
-          <div class="accordion-body px-2.5 pb-2.5 space-y-2 text-xs border-t border-slate-800/80 pt-2">
-            <label class="text-slate-400 block text-[10px]">Chọn loại phụ kiện (ASHRAE CT 30: ΔPj = Co × Pv):</label>
-            <select id="selFittingType" onchange="calculateFittingLoss()" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs">
-              <option value="0.22" data-name="Co cong 90° (R/W=1.5)">Co cong 90° (R/W=1.5, Co = 0.22)</option>
-              <option value="0.38" data-name="Co cong 90° (R/W=1.0)">Co cong 90° (R/W=1.0, Co = 0.38)</option>
-              <option value="0.18" data-name="Co vuông 90° Vanes">Co vuông 90° có Vanes (Co = 0.18)</option>
-              <option value="1.25" data-name="Co vuông 90° Không cánh">Co vuông 90° KHÔNG cánh (Co = 1.25)</option>
-              <option value="0.12" data-name="Co chếch 45°">Co chếch 45° (Co = 0.12)</option>
-              <option value="0.95" data-name="Tê rẽ nhánh 90°">Tê rẽ nhánh 90° Branch (Co = 0.95)</option>
-              <option value="0.25" data-name="Tê dòng thẳng Main">Tê dòng chạy thẳng Main (Co = 0.25)</option>
-              <option value="0.08" data-name="Côn thu ≤ 30°">Côn thu chuyển tiếp ≤ 30° (Co = 0.08)</option>
-              <option value="0.30" data-name="Van chặn lửa FD">Van chặn lửa FD (Co = 0.30)</option>
-              <option value="0.25" data-name="Van VCD mở 100%">Van VCD mở 100% (Co = 0.25)</option>
-            </select>
-
-            <div class="bg-slate-950 p-2 rounded border border-amber-500/30 flex justify-between items-center font-mono">
-              <span class="text-slate-400 text-[11px]">Tổn thất qua phụ kiện:</span>
-              <span id="resFittingLoss" class="text-amber-300 font-bold text-xs">ΔPj = 2.61 Pa</span>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ==================== HỆ 2: ỐNG GAS ==================== -->
-      <div id="ws_gas" class="hidden space-y-2">
-        <div id="card_gas_calc" class="accordion-card is-expanded">
-          <div class="accordion-header p-2.5 flex items-center justify-between" onclick="toggleAccordion('card_gas_calc')">
-            <div class="flex items-center gap-2 overflow-hidden">
-              <span class="text-sm">❄️</span>
-              <span class="font-bold text-slate-200 text-xs uppercase tracking-wide">Tuyến Ống Gas VRV / Split</span>
-              <span id="badgeGasSummary" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-fuchsia-950 text-fuchsia-300 border border-fuchsia-800/60 truncate">
-                Ø9.52/Ø15.88 mm • 3.0 HP
-              </span>
-            </div>
-            <span class="arrow-icon text-slate-400 text-xs ml-1">▼</span>
-          </div>
-
-          <div class="accordion-body px-2.5 pb-2.5 space-y-2 text-xs border-t border-slate-800/80 pt-2">
-            <div class="grid grid-cols-2 gap-2 items-center">
-              <div>
-                <label class="text-slate-400 block mb-0.5 text-[10px]">Công suất dàn (HP):</label>
-                <select id="selGasCapacity" onchange="autoSelectGasSize(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-slate-200 font-mono text-xs">
-                  <option value="1.5">1.5 - 2.0 HP (FCU Nhỏ)</option>
-                  <option value="3.0" selected>2.5 - 3.2 HP (FCU Vừa)</option>
-                  <option value="5.0">4.0 - 5.0 HP (FCU Lớn)</option>
-                  <option value="10.0">8.0 - 10.0 HP (Dàn nóng VRV)</option>
-                  <option value="16.0">12.0 - 16.0 HP (Module VRV)</option>
+            <div class="func-bar-body w-full p-2.5 space-y-2 text-xs">
+              <div class="grid grid-cols-2 gap-1.5 items-center">
+                <select id="selGasCapacity" onchange="autoSelectGasSize(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-slate-200 font-mono text-xs">
+                  <option value="1.5">1.5 - 2.0 HP (Nhỏ)</option>
+                  <option value="3.0" selected>2.5 - 3.2 HP (Vừa)</option>
+                  <option value="5.0">4.0 - 5.0 HP (Lớn)</option>
+                  <option value="10.0">8.0 - 10.0 HP (VRV)</option>
                 </select>
-              </div>
-              <div>
-                <label class="text-slate-400 block mb-0.5 text-[10px]">Cặp ống tự động tra:</label>
-                <div id="lblGasPairDisplay" class="bg-slate-950 border border-fuchsia-500/40 rounded px-2 py-1 text-fuchsia-300 font-mono font-bold text-center text-xs">
+                <div id="lblGasPairDisplay" class="bg-slate-950 border border-fuchsia-500/40 rounded px-1.5 py-1 text-fuchsia-300 font-mono font-bold text-center text-[11px]">
                   Ø9.52 / Ø15.88 mm
                 </div>
               </div>
-            </div>
 
-            <div class="grid grid-cols-2 gap-1.5 pt-1">
-              <button onclick="triggerDrawing('HVAC_DRAW_GAS_PAIR', 'Vẽ cặp ống gas song song')" class="cad-btn py-1.5 bg-fuchsia-700 hover:bg-fuchsia-600 text-white font-bold rounded text-xs">
-                <span>✏️ Vẽ Cặp Ống Gas</span>
-              </button>
-              <button onclick="triggerDrawing('INSERT BUN_BOCHIAGA.dxf', 'Chèn Bộ chia ga Refnet Joint')" class="cad-btn py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold rounded text-xs">
-                <span>🔀 Bộ Chia Ga</span>
-              </button>
+              <div class="grid grid-cols-2 gap-1.5 pt-0.5">
+                <button onclick="triggerDrawing('HVAC_DRAW_GAS_PAIR', 'Vẽ cặp ống gas song song')" class="cad-btn py-1.5 bg-fuchsia-700 hover:bg-fuchsia-600 text-white font-bold rounded text-[11px]">
+                  <span>✏️ Vẽ Cặp Ống Gas</span>
+                </button>
+                <button onclick="triggerDrawing('INSERT BUN_BOCHIAGA.dxf', 'Chèn Bộ chia ga Refnet Joint')" class="cad-btn py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold rounded text-[11px]">
+                  <span>🔀 Bộ Chia Ga</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- ==================== HỆ 3: CHILLER ==================== -->
-      <div id="ws_chiller" class="hidden space-y-2">
-        <div id="card_chiller_calc" class="accordion-card is-expanded">
-          <div class="accordion-header p-2.5 flex items-center justify-between" onclick="toggleAccordion('card_chiller_calc')">
-            <div class="flex items-center gap-2 overflow-hidden">
-              <span class="text-sm">🏢</span>
-              <span class="font-bold text-slate-200 text-xs uppercase tracking-wide">Tuyến Cấp / Hồi Chiller</span>
-              <span id="badgeChillerSummary" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-950 text-blue-300 border border-blue-800/60 truncate">
-                DN80 • 50 RT • 30.2 m³/h
+        <!-- ==================== HỆ 3: CHILLER ==================== -->
+        <div id="ws_chiller" class="hidden w-full space-y-2 flex flex-col items-start">
+          <div id="bar_chiller_calc" class="w-full flex flex-col items-start is-expanded">
+            <div class="func-bar-header px-2.5 py-1.5 gap-2" onclick="toggleBar('bar_chiller_calc')">
+              <span class="text-xs">🏢</span>
+              <span class="font-bold text-slate-200 text-xs whitespace-nowrap">Tuyến Cấp / Hồi Chiller</span>
+              <span id="badgeChillerSummary" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-950 text-blue-300 border border-blue-800/60 whitespace-nowrap">
+                DN80 • 50 RT
               </span>
+              <span class="arrow-icon text-slate-400 text-[10px] ml-0.5">▼</span>
             </div>
-            <span class="arrow-icon text-slate-400 text-xs ml-1">▼</span>
-          </div>
 
-          <div class="accordion-body px-2.5 pb-2.5 space-y-2 text-xs border-t border-slate-800/80 pt-2">
-            <div class="grid grid-cols-2 gap-2 items-center">
-              <div>
-                <label class="text-slate-400 block mb-0.5 text-[10px]">Tải lạnh (RT):</label>
-                <input type="number" id="inChillerRT" value="50" onchange="autoCalcChillerDN(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-slate-200 font-mono text-center text-xs" />
-              </div>
-              <div>
-                <label class="text-slate-400 block mb-0.5 text-[10px]">Cỡ ống DN tra được:</label>
-                <div id="lblChillerDNDisplay" class="bg-slate-950 border border-blue-500/40 rounded px-2 py-1 text-blue-300 font-mono font-bold text-center text-xs">
+            <div class="func-bar-body w-full p-2.5 space-y-2 text-xs">
+              <div class="grid grid-cols-2 gap-1.5 items-center">
+                <div class="flex items-center gap-1">
+                  <span class="text-slate-400 text-[10px]">RT:</span>
+                  <input type="number" id="inChillerRT" value="50" onchange="autoCalcChillerDN(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-slate-200 font-mono text-center text-xs" />
+                </div>
+                <div id="lblChillerDNDisplay" class="bg-slate-950 border border-blue-500/40 rounded px-1.5 py-1 text-blue-300 font-mono font-bold text-center text-[11px]">
                   DN80 (30.2 m³/h)
                 </div>
               </div>
-            </div>
 
-            <div class="grid grid-cols-2 gap-1.5 pt-1">
-              <button onclick="triggerDrawing('HVAC_DRAW_CHILLER_PAIR', 'Vẽ cặp ống Chiller Cấp/Hồi')" class="cad-btn py-1.5 bg-blue-700 hover:bg-blue-600 text-white font-bold rounded text-xs">
-                <span>✏️ Vẽ Tuyến CHW</span>
-              </button>
-              <button onclick="triggerDrawing('HVAC_CHILLER_VALVE_PACKAGE', 'Chèn cụm van Chiller')" class="cad-btn py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold rounded text-xs">
-                <span>🛡️ Cụm Van</span>
-              </button>
+              <div class="grid grid-cols-2 gap-1.5 pt-0.5">
+                <button onclick="triggerDrawing('HVAC_DRAW_CHILLER_PAIR', 'Vẽ cặp ống Chiller Cấp/Hồi')" class="cad-btn py-1.5 bg-blue-700 hover:bg-blue-600 text-white font-bold rounded text-[11px]">
+                  <span>✏️ Tuyến CHW</span>
+                </button>
+                <button onclick="triggerDrawing('HVAC_CHILLER_VALVE_PACKAGE', 'Chèn cụm van Chiller')" class="cad-btn py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold rounded text-[11px]">
+                  <span>🛡️ Cụm Van</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- ==================== HỆ 4: THOÁT NƯỚC NGƯNG ==================== -->
-      <div id="ws_water" class="hidden space-y-2">
-        <div id="card_water_calc" class="accordion-card is-expanded">
-          <div class="accordion-header p-2.5 flex items-center justify-between" onclick="toggleAccordion('card_water_calc')">
-            <div class="flex items-center gap-2 overflow-hidden">
-              <span class="text-sm">💧</span>
-              <span class="font-bold text-slate-200 text-xs uppercase tracking-wide">Thoát Nước Ngưng Dốc 1%</span>
-              <span id="badgeWaterSummary" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-teal-950 text-teal-300 border border-teal-800/60 truncate">
+        <!-- ==================== HỆ 4: THOÁT NƯỚC NGƯNG ==================== -->
+        <div id="ws_water" class="hidden w-full space-y-2 flex flex-col items-start">
+          <div id="bar_water_calc" class="w-full flex flex-col items-start is-expanded">
+            <div class="func-bar-header px-2.5 py-1.5 gap-2" onclick="toggleBar('bar_water_calc')">
+              <span class="text-xs">💧</span>
+              <span class="font-bold text-slate-200 text-xs whitespace-nowrap">Thoát Nước Ngưng Dốc 1%</span>
+              <span id="badgeWaterSummary" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-teal-950 text-teal-300 border border-teal-800/60 whitespace-nowrap">
                 D27 • i = 1%
               </span>
-            </div>
-            <span class="arrow-icon text-slate-400 text-xs ml-1">▼</span>
-          </div>
-
-          <div class="accordion-body px-2.5 pb-2.5 space-y-2 text-xs border-t border-slate-800/80 pt-2">
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="text-slate-400 block mb-0.5 text-[10px]">Cỡ ống PVC:</label>
-                <select id="selDrainSize" onchange="saveState()" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-teal-300 font-mono font-bold text-xs">
-                  <option>D21 (1 FCU nhỏ)</option>
-                  <option selected>D27 (1-2 FCU)</option>
-                  <option>D34 (Gom 3-4 FCU)</option>
-                  <option>D42 (Ống trục gom)</option>
-                </select>
-              </div>
-              <div>
-                <label class="text-slate-400 block mb-0.5 text-[10px]">Cao độ khởi đầu:</label>
-                <input type="text" id="txtDrainElevation" value="+2750" onchange="saveState()" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-slate-200 font-mono text-center text-xs" />
-              </div>
+              <span class="arrow-icon text-slate-400 text-[10px] ml-0.5">▼</span>
             </div>
 
-            <div class="grid grid-cols-2 gap-1.5 pt-1">
-              <button onclick="triggerDrawing('HVAC_DRAW_DRAIN_SLOPE', 'Vẽ tuyến dốc 1%')" class="cad-btn py-1.5 bg-teal-700 hover:bg-teal-600 text-white font-bold rounded text-xs">
-                <span>📐 Vẽ Dốc 1%</span>
-              </button>
-              <button onclick="triggerDrawing('HVAC_INSERT_UTRAP', 'Chèn bẫy U-Trap')" class="cad-btn py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold rounded text-xs">
-                <span>🪤 Bẫy U-Trap</span>
-              </button>
+            <div class="func-bar-body w-full p-2.5 space-y-2 text-xs">
+              <select id="selDrainSize" onchange="saveState()" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-teal-300 font-mono font-bold text-xs">
+                <option>D21 (1 FCU nhỏ)</option>
+                <option selected>D27 (1-2 FCU)</option>
+                <option>D34 (Gom 3-4 FCU)</option>
+                <option>D42 (Ống trục gom)</option>
+              </select>
+
+              <div class="grid grid-cols-2 gap-1.5 pt-0.5">
+                <button onclick="triggerDrawing('HVAC_DRAW_DRAIN_SLOPE', 'Vẽ tuyến dốc 1%')" class="cad-btn py-1.5 bg-teal-700 hover:bg-teal-600 text-white font-bold rounded text-[11px]">
+                  <span>📐 Vẽ Dốc 1%</span>
+                </button>
+                <button onclick="triggerDrawing('HVAC_INSERT_UTRAP', 'Chèn bẫy U-Trap')" class="cad-btn py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold rounded text-[11px]">
+                  <span>🪤 Bẫy U-Trap</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- ==================== HỆ 5: TÍN HIỆU & BMS ==================== -->
-      <div id="ws_signal" class="hidden space-y-2">
-        <div id="card_signal_calc" class="accordion-card is-expanded">
-          <div class="accordion-header p-2.5 flex items-center justify-between" onclick="toggleAccordion('card_signal_calc')">
-            <div class="flex items-center gap-2 overflow-hidden">
-              <span class="text-sm">⚡</span>
-              <span class="font-bold text-slate-200 text-xs uppercase tracking-wide">Điều Khiển & BMS</span>
-              <span id="badgeSignalSummary" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-yellow-950 text-yellow-300 border border-yellow-800/60 truncate">
+        <!-- ==================== HỆ 5: TÍN HIỆU & BMS ==================== -->
+        <div id="ws_signal" class="hidden w-full space-y-2 flex flex-col items-start">
+          <div id="bar_signal_calc" class="w-full flex flex-col items-start is-expanded">
+            <div class="func-bar-header px-2.5 py-1.5 gap-2" onclick="toggleBar('bar_signal_calc')">
+              <span class="text-xs">⚡</span>
+              <span class="font-bold text-slate-200 text-xs whitespace-nowrap">Điều Khiển & BMS</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-yellow-950 text-yellow-300 border border-yellow-800/60 whitespace-nowrap">
                 RS485 / Modbus
               </span>
+              <span class="arrow-icon text-slate-400 text-[10px] ml-0.5">▼</span>
             </div>
-            <span class="arrow-icon text-slate-400 text-xs ml-1">▼</span>
-          </div>
 
-          <div class="accordion-body px-2.5 pb-2.5 space-y-2 text-xs border-t border-slate-800/80 pt-2">
-            <div class="grid grid-cols-2 gap-1.5">
-              <button onclick="triggerDrawing('HVAC_AUTO_LOOP_THERMOSTAT', 'Auto nối dây Thermostat từ FCU ra công tắc tường')" class="cad-btn py-2 bg-slate-900 border border-slate-700 rounded text-left px-2">
-                <span class="text-yellow-400 font-bold block text-xs">🔗 Auto Thermostat</span>
-                <span class="text-[10px] text-slate-400">Nối FCU ra công tắc</span>
-              </button>
-              <button onclick="triggerDrawing('HVAC_GENERATE_BMS_IO_LIST', 'Xuất bảng I/O Point List BMS')" class="cad-btn py-2 bg-slate-900 border border-slate-700 rounded text-left px-2">
-                <span class="text-yellow-400 font-bold block text-xs">📋 Bảng I/O List</span>
-                <span class="text-[10px] text-slate-400">Đếm điểm DI/DO/AI/AO</span>
-              </button>
+            <div class="func-bar-body w-full p-2.5 space-y-1.5 text-xs">
+              <div class="grid grid-cols-2 gap-1.5">
+                <button onclick="triggerDrawing('HVAC_AUTO_LOOP_THERMOSTAT', 'Auto nối dây Thermostat từ FCU ra công tắc tường')" class="cad-btn py-1.5 bg-slate-900 border border-slate-700 rounded text-left px-2">
+                  <span class="text-yellow-400 font-bold block text-[11px]">🔗 Nối Thermostat</span>
+                </button>
+                <button onclick="triggerDrawing('HVAC_GENERATE_BMS_IO_LIST', 'Xuất bảng I/O Point List BMS')" class="cad-btn py-1.5 bg-slate-900 border border-slate-700 rounded text-left px-2">
+                  <span class="text-yellow-400 font-bold block text-[11px]">📋 Bảng I/O List</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
+
+      </div>
+
+      <!-- 4. STATUS BAR GỌN -->
+      <div class="w-full p-1.5 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-[10px]">
+        <div class="flex items-center gap-1.5 overflow-hidden">
+          <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
+          <span id="txtCmdLog" class="font-mono text-slate-300 truncate">BUN-HVAC-DESIGN sẵn sàng</span>
+        </div>
+        <button onclick="cancelCmd()" class="px-1.5 py-0.5 bg-red-500/20 text-red-400 border border-red-500/30 rounded font-mono font-bold">
+          ESC
+        </button>
       </div>
 
     </div>
 
-    <!-- 4. BOTTOM STATUS BAR -->
-    <div class="p-2 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-xs">
-      <div class="flex items-center gap-2 overflow-hidden">
-        <div class="flex items-center gap-1 px-1.5 py-0.5 rounded font-mono font-bold text-[10px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 whitespace-nowrap">
-          <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
-          <span id="txtStatusAction">SẴN SÀNG</span>
-        </div>
-        <span id="txtCmdLog" class="font-mono text-slate-300 truncate text-[11px]">BUN-HVAC-DESIGN sẵn sàng</span>
-      </div>
-      <button onclick="cancelCmd()" class="px-2 py-0.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded text-[10px] font-mono font-bold ml-2">
-        ESC
-      </button>
+    <!-- PHẦN DƯỚI ĐỂ TRỐNG TỰ NHIÊN (CANVAS BẢN VẼ AUTOCAD KHÔNG BỊ CHIẾM DIỆN TÍCH) -->
+    <div class="w-full flex-1 flex items-center justify-center p-6 text-slate-700 text-xs font-mono select-none">
+      <span>[ Vùng không gian bản vẽ AutoCAD để trống tự nhiên ]</span>
     </div>
 
   </div>
@@ -683,13 +623,10 @@
     let terminalFlowUnit = 'm3h';
     let calcMethod = 'friction';
 
-    // ==========================================
-    // THEME MANAGEMENT (3 KIỂU GIAO DIỆN)
-    // ==========================================
     function setTheme(themeName) {
       activeTheme = themeName;
       const root = document.getElementById('paletteRoot');
-      root.className = `theme-${themeName} palette-box max-w-md w-full border border-slate-800 shadow-2xl overflow-hidden flex flex-col`;
+      root.className = `theme-${themeName} palette-box w-full rounded-xl border border-slate-800 shadow-lg flex flex-col items-start overflow-hidden`;
 
       ['obsidian', 'cyber', 'minimal'].forEach(t => {
         const btn = document.getElementById(`btnTheme_${t}`);
@@ -702,43 +639,38 @@
       saveState();
     }
 
-    // ==========================================
-    // ACCORDION (THANH NGANG THU GỌN / XỔ XUỐNG)
-    // ==========================================
-    function toggleAccordion(cardId) {
-      const card = document.getElementById(cardId);
-      if (!card) return;
-      card.classList.toggle('is-expanded');
+    function toggleBar(barId) {
+      const bar = document.getElementById(barId);
+      if (!bar) return;
+      bar.classList.toggle('is-expanded');
       saveState();
     }
 
-    function toggleAllAccordions(expand) {
-      document.querySelectorAll('.accordion-card').forEach(card => {
-        if (expand) card.classList.add('is-expanded');
-        else card.classList.remove('is-expanded');
+    function toggleAllBars(expand) {
+      document.querySelectorAll('#paletteRoot .flex-col.items-start').forEach(bar => {
+        if (expand) bar.classList.add('is-expanded');
+        else bar.classList.remove('is-expanded');
       });
       saveState();
     }
 
-    // ==========================================
-    // STATE PERSISTENCE (GHI NHỚ VỊ TRÍ & THAO TÁC)
-    // ==========================================
     function saveState() {
       try {
-        const expandedCards = [];
-        document.querySelectorAll('.accordion-card.is-expanded').forEach(c => expandedCards.push(c.id));
+        const expandedBars = [];
+        document.querySelectorAll('.is-expanded').forEach(b => {
+          if (b.id && b.id.startsWith('bar_')) expandedBars.push(b.id);
+        });
 
         const state = {
           theme: activeTheme,
           category: activeCategory,
-          expandedCards: expandedCards,
+          expandedBars: expandedBars,
           flowVal: document.getElementById('inDuctFlow')?.value,
           flowUnit: flowUnit,
           calcMethod: calcMethod,
           width: document.getElementById('p1Width')?.value,
           height: document.getElementById('p1Height')?.value,
           termFlow: document.getElementById('inTerminalFlow')?.value,
-          termBlock: document.getElementById('selTerminalBlock')?.value,
           termNeck: document.getElementById('selTerminalNeckDia')?.value,
           isMainDuct: document.getElementById('chkIsMainDuct')?.checked
         };
@@ -755,10 +687,10 @@
         if (state.theme) setTheme(state.theme);
         if (state.category) switchCategory(state.category);
 
-        if (state.expandedCards && Array.isArray(state.expandedCards)) {
-          document.querySelectorAll('.accordion-card').forEach(c => {
-            if (state.expandedCards.includes(c.id)) c.classList.add('is-expanded');
-            else c.classList.remove('is-expanded');
+        if (state.expandedBars && Array.isArray(state.expandedBars)) {
+          document.querySelectorAll('[id^="bar_"]').forEach(b => {
+            if (state.expandedBars.includes(b.id)) b.classList.add('is-expanded');
+            else b.classList.remove('is-expanded');
           });
         }
 
@@ -766,15 +698,11 @@
         if (state.width && document.getElementById('p1Width')) document.getElementById('p1Width').value = state.width;
         if (state.height && document.getElementById('p1Height')) document.getElementById('p1Height').value = state.height;
         if (state.termFlow && document.getElementById('inTerminalFlow')) document.getElementById('inTerminalFlow').value = state.termFlow;
-        if (state.termBlock && document.getElementById('selTerminalBlock')) document.getElementById('selTerminalBlock').value = state.termBlock;
         if (state.termNeck && document.getElementById('selTerminalNeckDia')) document.getElementById('selTerminalNeckDia').value = state.termNeck;
         if (state.isMainDuct !== undefined && document.getElementById('chkIsMainDuct')) document.getElementById('chkIsMainDuct').checked = state.isMainDuct;
       } catch (e) {}
     }
 
-    // ==========================================
-    // KHÍ ĐỘNG HỌC ỐNG GIÓ (ASHRAE 2001)
-    // ==========================================
     function toggleFlowUnit() {
       const inputEl = document.getElementById('inDuctFlow');
       const btn = document.getElementById('btnFlowUnit');
@@ -783,16 +711,15 @@
       if (flowUnit === 'm3h') {
         flowUnit = 'Ls';
         btn.textContent = 'L/s';
-        btn.className = "px-2 py-1 bg-amber-500/40 text-amber-300 font-mono font-bold text-[10px] border-l border-slate-700";
+        btn.className = "px-1.5 py-1 bg-amber-500/40 text-amber-300 font-mono font-bold text-[10px] border-l border-slate-700";
         inputEl.value = Math.round(val / 3.6);
       } else {
         flowUnit = 'm3h';
         btn.textContent = 'm³/h';
-        btn.className = "px-2 py-1 bg-cyan-700/40 text-cyan-300 font-mono font-bold text-[10px] border-l border-slate-700";
+        btn.className = "px-1.5 py-1 bg-cyan-700/40 text-cyan-300 font-mono font-bold text-[10px] border-l border-slate-700";
         inputEl.value = Math.round(val * 3.6);
       }
       runDuctCalculation();
-      saveState();
     }
 
     function setCalcMethod(method) {
@@ -808,7 +735,6 @@
         : "px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 hover:text-white";
 
       runDuctCalculation();
-      saveState();
     }
 
     function calcPv(V) { return 1.204 * Math.pow(V, 2) / 2; }
@@ -836,8 +762,8 @@
       const flowM3s = flowUnit === 'Ls' ? (rawFlow / 1000) : (rawFlow / 3600);
       if (flowM3s <= 0) return;
 
-      const standardSizesW = [150, 200, 250, 300, 350, 400, 450, 500, 600, 700, 800, 1000, 1200];
-      const standardSizesH = [150, 200, 250, 300, 350, 400, 500, 600, 800];
+      const standardSizesW = [150, 200, 250, 300, 350, 400, 450, 500, 600, 700, 800, 1000];
+      const standardSizesH = [150, 200, 250, 300, 350, 400, 500, 600];
 
       let targetW = 400, targetH = 250;
       let minDiff = 999999;
@@ -889,35 +815,32 @@
       let rawFlow = parseFloat(document.getElementById('inDuctFlow').value) || 0;
       const flowM3s = flowUnit === 'Ls' ? (rawFlow / 1000) : (rawFlow / 3600);
       updateEngineeringResults(w, h, flowM3s);
-      saveState();
     }
 
     function updateEngineeringResults(w, h, flowM3s) {
       const res = calcDuctPressureDropPerMeter(w, h, flowM3s);
       const aspectRatio = (Math.max(w, h) / Math.min(w, h)).toFixed(1);
 
-      document.getElementById('resVelocity').textContent = `${res.V.toFixed(2)} m/s`;
-      document.getElementById('resPv').textContent = `${res.Pv.toFixed(2)} Pa`;
-      document.getElementById('resDh').textContent = `Ø${Math.round(res.Dh)} mm`;
-      document.getElementById('resFrictionDrop').textContent = `${res.dPf_per_m.toFixed(2)} Pa/m`;
+      document.getElementById('resVelocity').textContent = `${res.V.toFixed(2)}m/s`;
+      document.getElementById('resPv').textContent = `${res.Pv.toFixed(1)}Pa`;
+      document.getElementById('resDh').textContent = `Ø${Math.round(res.Dh)}`;
+      document.getElementById('resFrictionDrop').textContent = `${res.dPf_per_m.toFixed(2)}P/m`;
 
-      // Cập nhật Live Badge trên thanh tiêu đề thu gọn!
-      document.getElementById('badgeDuctSummary').textContent = `${w}×${h} • V=${res.V.toFixed(1)}m/s • ${res.dPf_per_m.toFixed(2)}Pa/m`;
+      // Live Badge trên thanh tiêu đề
+      document.getElementById('badgeDuctSummary').textContent = `${w}×${h} • ${res.dPf_per_m.toFixed(2)}Pa/m`;
 
       let hasWarning = false;
       const vEl = document.getElementById('resVelocity');
       if (res.V > 8.0) {
-        vEl.className = "text-red-500 font-bold bg-red-950/60 px-1 rounded border border-red-500/50";
+        vEl.className = "text-red-500 font-bold bg-red-950/60 px-0.5 rounded";
         hasWarning = true;
-      } else if (res.V > 6.5) {
-        vEl.className = "text-amber-400 font-bold";
       } else {
         vEl.className = "text-emerald-400 font-bold";
       }
 
       const dpEl = document.getElementById('resFrictionDrop');
       if (res.dPf_per_m > 1.30) {
-        dpEl.className = "text-red-500 font-bold bg-red-950/60 px-1 rounded border border-red-500/50";
+        dpEl.className = "text-red-500 font-bold bg-red-950/60 px-0.5 rounded";
         hasWarning = true;
       } else {
         dpEl.className = "text-emerald-400 font-bold";
@@ -925,10 +848,10 @@
 
       const badgeRatio = document.getElementById('badgeAspectRatio');
       if (aspectRatio <= 3.0) {
-        badgeRatio.className = "px-1.5 py-0.2 rounded font-mono font-bold text-[10px] bg-emerald-500/20 text-emerald-400";
+        badgeRatio.className = "px-1.5 py-0.2 rounded font-mono font-bold text-[9px] bg-emerald-500/20 text-emerald-400";
         badgeRatio.textContent = `W/H: ${aspectRatio}:1`;
       } else {
-        badgeRatio.className = "px-1.5 py-0.2 rounded font-mono font-bold text-[10px] bg-red-500/20 text-red-400 border border-red-500/50";
+        badgeRatio.className = "px-1.5 py-0.2 rounded font-mono font-bold text-[9px] bg-red-500/20 text-red-400";
         badgeRatio.textContent = `W/H: ${aspectRatio}:1 (>4:1)`;
         hasWarning = true;
       }
@@ -947,9 +870,6 @@
       saveState();
     }
 
-    // ==========================================
-    // TÍNH CHỌN & GÁN LƯU LƯỢNG MIỆNG GIÓ
-    // ==========================================
     function toggleTerminalFlowUnit() {
       const inputEl = document.getElementById('inTerminalFlow');
       const btn = document.getElementById('btnTerminalFlowUnit');
@@ -958,16 +878,15 @@
       if (terminalFlowUnit === 'm3h') {
         terminalFlowUnit = 'Ls';
         btn.textContent = 'L/s';
-        btn.className = "px-2 py-1 bg-amber-500/40 text-amber-300 font-mono font-bold text-[10px] border-l border-slate-700";
+        btn.className = "px-1.5 py-1 bg-amber-500/40 text-amber-300 font-mono font-bold text-[10px] border-l border-slate-700";
         inputEl.value = Math.round(val / 3.6);
       } else {
         terminalFlowUnit = 'm3h';
         btn.textContent = 'm³/h';
-        btn.className = "px-2 py-1 bg-indigo-700/40 text-indigo-300 font-mono font-bold text-[10px] border-l border-slate-700";
+        btn.className = "px-1.5 py-1 bg-indigo-700/40 text-indigo-300 font-mono font-bold text-[10px] border-l border-slate-700";
         inputEl.value = Math.round(val * 3.6);
       }
       runTerminalCalculation();
-      saveState();
     }
 
     function copyDuctFlowToTerminal() {
@@ -988,7 +907,7 @@
 
       const targetV = parseFloat(document.getElementById('selTargetVneck').value) || 2.5;
       const requiredArea = qM3s / targetV;
-      const standardNecks = [150, 200, 250, 300, 350];
+      const standardNecks = [150, 200, 250, 300];
       
       let bestNeck = 200;
       let minDiff = 999999;
@@ -1016,12 +935,10 @@
       let rawQ = parseFloat(document.getElementById('inTerminalFlow').value) || 0;
       let qM3s = terminalFlowUnit === 'Ls' ? (rawQ / 1000.0) : (rawQ / 3600.0);
       updateTerminalHydraulics(neck, qM3s);
-      saveState();
     }
 
     function onTerminalTypeChanged() {
       runTerminalCalculation();
-      saveState();
     }
 
     function updateTerminalHydraulics(neckDiaMm, qM3s) {
@@ -1031,18 +948,18 @@
       let dP = 2.0 * pvNeck;
       let nc = Math.round(18 + (vNeck * 3.8));
 
-      document.getElementById('resTerminalVneck').textContent = `${vNeck.toFixed(2)} m/s`;
-      document.getElementById('resTerminalDp').textContent = `${dP.toFixed(1)} Pa`;
-      document.getElementById('resTerminalNC').textContent = `NC ${nc}`;
+      document.getElementById('resTerminalVneck').textContent = `${vNeck.toFixed(2)}m/s`;
+      document.getElementById('resTerminalDp').textContent = `${dP.toFixed(0)}Pa`;
+      document.getElementById('resTerminalNC').textContent = `NC${nc}`;
 
       const rawQ = document.getElementById('inTerminalFlow').value;
       const unit = terminalFlowUnit === 'Ls' ? 'L/s' : 'm³/h';
-      document.getElementById('badgeTermSummary').textContent = `Ø${neckDiaMm} • Q=${rawQ}${unit} • NC${nc}`;
+      document.getElementById('badgeTermSummary').textContent = `Ø${neckDiaMm} • Q=${rawQ}${unit}`;
 
       const vEl = document.getElementById('resTerminalVneck');
       const warnBox = document.getElementById('boxTerminalWarning');
       if (vNeck > 3.5) {
-        vEl.className = "text-red-500 font-bold bg-red-950/60 px-1 rounded border border-red-500/50";
+        vEl.className = "text-red-500 font-bold bg-red-950/60 px-0.5 rounded";
         warnBox.classList.remove('hidden');
       } else {
         vEl.className = "text-emerald-400 font-bold";
@@ -1071,7 +988,7 @@
       const dPj = Co * Pv;
 
       document.getElementById('resFittingLoss').textContent = `ΔPj = ${dPj.toFixed(2)} Pa`;
-      document.getElementById('badgeFittingSummary').textContent = `${optName.split(' ')[0]} • Co=${Co} • ΔPj=${dPj.toFixed(1)}Pa`;
+      document.getElementById('badgeFittingSummary').textContent = `${optName} • ΔPj=${dPj.toFixed(1)}Pa`;
       saveState();
     }
 
@@ -1080,28 +997,26 @@
       if (hp <= 2.0) display.textContent = "Ø6.35 / Ø12.7 mm";
       else if (hp <= 3.2) display.textContent = "Ø9.52 / Ø15.88 mm";
       else if (hp <= 5.0) display.textContent = "Ø9.52 / Ø19.05 mm";
-      else if (hp <= 10.0) display.textContent = "Ø12.7 / Ø28.58 mm";
-      else display.textContent = "Ø15.88 / Ø34.90 mm";
+      else display.textContent = "Ø12.7 / Ø28.58 mm";
 
-      document.getElementById('badgeGasSummary').textContent = `${display.textContent} • ${hp} HP`;
+      document.getElementById('badgeGasSummary').textContent = `${display.textContent} • ${hp}HP`;
       saveState();
     }
 
     function autoCalcChillerDN(rt) {
       const g = (rt * 0.605).toFixed(1);
-      let dn = rt <= 20 ? "DN50" : rt <= 40 ? "DN65" : rt <= 75 ? "DN80" : rt <= 130 ? "DN100" : "DN150";
+      let dn = rt <= 20 ? "DN50" : rt <= 40 ? "DN65" : rt <= 75 ? "DN80" : "DN100";
       document.getElementById('lblChillerDNDisplay').textContent = `${dn} (${g} m³/h)`;
-      document.getElementById('badgeChillerSummary').textContent = `${dn} • ${rt} RT • ${g} m³/h`;
+      document.getElementById('badgeChillerSummary').textContent = `${dn} • ${rt}RT`;
       saveState();
     }
 
     function insertAirTerminalAction() {
       const blockFile = document.getElementById('selTerminalBlock').value;
       const neck = document.getElementById('selTerminalNeckDia').value;
-      const face = document.getElementById('selTerminalFaceSize').value;
       const rawQ = document.getElementById('inTerminalFlow').value;
       const unit = terminalFlowUnit === 'Ls' ? 'L/s' : 'm³/h';
-      triggerDrawing(`_INSERT "${blockFile}"`, `Chèn ${blockFile} (Cổ Ø${neck}, Q=${rawQ}${unit}) & Gán XData`);
+      triggerDrawing(`_INSERT "${blockFile}"`, `Chèn ${blockFile} (Cổ Ø${neck}, Q=${rawQ}${unit})`);
     }
 
     function loadLayersForCategory(catKey) {
@@ -1126,7 +1041,7 @@
       activeLayer = layerItem;
       const dot = document.getElementById('hudSysIndicatorDot');
       dot.style.backgroundColor = layerItem.hex;
-      dot.style.boxShadow = `0 0 10px ${layerItem.hex}`;
+      dot.style.boxShadow = `0 0 8px ${layerItem.hex}`;
     }
 
     function switchCategory(catKey) {
@@ -1135,10 +1050,10 @@
         const btn = document.getElementById(`catBtn_${k}`);
         const ws = document.getElementById(`ws_${k}`);
         if (k === catKey) {
-          btn.className = "cad-btn py-1.5 rounded-lg border border-cyan-500/50 bg-cyan-600 text-white flex flex-col items-center";
+          btn.className = "cad-btn px-2.5 py-1 rounded-md border border-cyan-500/50 bg-cyan-600 text-white font-bold text-[11px] flex items-center gap-1";
           ws.classList.remove('hidden');
         } else {
-          btn.className = "cad-btn py-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-white flex flex-col items-center";
+          btn.className = "cad-btn px-2.5 py-1 rounded-md border border-slate-800 bg-slate-900 text-slate-400 hover:text-white font-medium text-[11px] flex items-center gap-1";
           ws.classList.add('hidden');
         }
       });
@@ -1147,12 +1062,10 @@
     }
 
     function triggerDrawing(cmd, desc) {
-      document.getElementById('txtStatusAction').textContent = cmd;
       document.getElementById('txtCmdLog').textContent = desc;
     }
 
     function cancelCmd() {
-      document.getElementById('txtStatusAction').textContent = 'SẴN SÀNG';
       document.getElementById('txtCmdLog').textContent = 'Đã hủy lệnh (ESC)';
     }
 
